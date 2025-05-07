@@ -5,12 +5,15 @@ using UnrealBuildTool;
 
 public class Codingcpp : ModuleRules
 {
-	public Codingcpp(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
-        PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
+    public Codingcpp(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        //PrivatePCHHeaderFile = "Codingcpp.h";
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
-	}
+        //PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
+        //PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
+        PublicDependencyModuleNames.AddRange(new string[] {
+            "Core","CoreUObject","Engine","InputCore","EnhancedInput"
+        });
+    }
 }

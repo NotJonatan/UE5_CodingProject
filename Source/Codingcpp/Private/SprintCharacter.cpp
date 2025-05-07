@@ -1,34 +1,41 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
+// Source/Codingcpp/Private/SprintCharacter.cpp
 #include "SprintCharacter.h"
+//#include "Codingcpp.h"                             // causes error if this isn't first library
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/InputComponent.h"
 
-// Sets default values
+#define SPRINT_ACTION_NAME "Sprint"
+
 ASprintCharacter::ASprintCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+    // ensure our movement component starts at WalkSpeed
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
-// Called when the game starts or when spawned
 void ASprintCharacter::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+    // in case someone tweaked WalkSpeed in the editor
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
-// Called every frame
-void ASprintCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-// Called to bind functionality to input
 void ASprintCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    // bind sprint pressed/released
+    PlayerInputComponent->BindAction(SPRINT_ACTION_NAME, IE_Pressed, this, &ASprintCharacter::StartSprinting);
+    PlayerInputComponent->BindAction(SPRINT_ACTION_NAME, IE_Released, this, &ASprintCharacter::StopSprinting);
+
+    // TODO: bind MoveForward/MoveRight axes here
 }
 
+void ASprintCharacter::StartSprinting()
+{
+    GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+}
+
+void ASprintCharacter::StopSprinting()
+{
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}

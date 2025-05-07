@@ -1,29 +1,33 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// Source/Codingcpp/Public/SprintCharacter.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "SprintCharacter.generated.h"
 
+/** Simple character that can sprint when you hold the Sprint action. */
 UCLASS()
 class CODINGCPP_API ASprintCharacter : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	ASprintCharacter();
+    ASprintCharacter();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    // Called on IE_Pressed for our Sprint action
+    void StartSprinting();
+    // Called on IE_Released
+    void StopSprinting();
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    // How fast we walk normally
+    UPROPERTY(EditDefaultsOnly, Category = "Sprint")
+    float WalkSpeed = 600.f;
 
+    // How fast we go when sprinting
+    UPROPERTY(EditDefaultsOnly, Category = "Sprint")
+    float SprintSpeed = 1200.f;
 };
