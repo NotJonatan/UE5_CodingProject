@@ -2,20 +2,23 @@
 #include "SprintCharacter.h"
 //#include "Codingcpp.h"                             // causes error if this isn't first library
 #include "GameFramework/CharacterMovementComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
 #include "Components/InputComponent.h"
 
-#define SPRINT_ACTION_NAME "Sprint"
+//#define SPRINT_ACTION_NAME "Sprint"
 
 ASprintCharacter::ASprintCharacter()
 {
-    // ensure our movement component starts at WalkSpeed
+    PrimaryActorTick.bCanEverTick = true;
     GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 void ASprintCharacter::BeginPlay()
 {
     Super::BeginPlay();
-    // in case someone tweaked WalkSpeed in the editor
     GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
@@ -23,11 +26,27 @@ void ASprintCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    // bind sprint pressed/released
-    PlayerInputComponent->BindAction(SPRINT_ACTION_NAME, IE_Pressed, this, &ASprintCharacter::StartSprinting);
-    PlayerInputComponent->BindAction(SPRINT_ACTION_NAME, IE_Released, this, &ASprintCharacter::StopSprinting);
+    PlayerInputComponent->BindAxis("MoveForward", this, &ASprintCharacter::MoveForward);
+    PlayerInputComponent->BindAxis("MoveRight", this, &ASprintCharacter::MoveRight);
+    PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ASprintCharacter::StartSprinting);
+    PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ASprintCharacter::StopSprinting);
+    // ...etc
+}
 
-    // TODO: bind MoveForward/MoveRight axes here
+void ASprintCharacter::MoveForward(float Value)
+{
+    if (Value != 0.f)
+    {
+        AddMovementInput(GetActorForwardVector(), Value);
+    }
+}
+
+void ASprintCharacter::MoveRight(float Value)
+{
+    if (Value != 0.f)
+    {
+        AddMovementInput(GetActorRightVector(), Value);
+    }
 }
 
 void ASprintCharacter::StartSprinting()
