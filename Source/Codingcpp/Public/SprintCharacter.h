@@ -3,9 +3,21 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+// Enhanced Input
+#include "InputActionValue.h"            // <<–– for FInputActionValue
+#include "InputMappingContext.h"
+#include "InputAction.h"
+
+//#include "EnhancedInputComponent.h"
+//#include "EnhancedInputSubsystems.h"
+
+
+class UInputMappingContext;
+class UInputAction;
+
 #include "SprintCharacter.generated.h"
 
-/** Simple character that can sprint when you hold the Sprint action. */
 UCLASS()
 class CODINGCPP_API ASprintCharacter : public ACharacter
 {
@@ -16,18 +28,34 @@ public:
 
 protected:
     virtual void BeginPlay() override;
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-    // Called on IE_Pressed for our Sprint action
-    void StartSprinting();
-    // Called on IE_Released
-    void StopSprinting();
+    //–– Input callbacks ––
+    void MoveInput(const FInputActionValue& Value);
+    void LookInput(const FInputActionValue& Value);
+    void StartSprinting(const FInputActionValue& Value);
+    void StopSprinting(const FInputActionValue& Value);
 
-    // How fast we walk normally
+    //–– Sprint speeds ––
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
     float WalkSpeed = 600.f;
 
-    // How fast we go when sprinting
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
     float SprintSpeed = 1200.f;
+
+    //–– Enhanced Input assets (assign in BP) ––
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+    UInputMappingContext* DefaultMappingContext;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Move;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Look;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Jump;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Sprint;
 };

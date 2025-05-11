@@ -3,9 +3,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+//#include "SprintCharacter.h"
 #include "MidnightRushGameMode.generated.h"
 
-/** Our custom GameMode: uses ASprintCharacter as the default pawn */
 UCLASS()
 class CODINGCPP_API AMidnightRushGameMode : public AGameModeBase
 {
