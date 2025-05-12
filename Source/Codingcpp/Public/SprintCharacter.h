@@ -8,6 +8,7 @@
 #include "InputActionValue.h"            // <<–– for FInputActionValue
 #include "InputMappingContext.h"
 #include "InputAction.h"
+#include "HealthComponent.h"        // at the top
 #include "SprintCharacter.generated.h"
 
 
@@ -46,6 +47,11 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     float WalkSpeed = 600.f;
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
     float SprintSpeed = 1200.f;
+
+//private:
+    // in your character class body:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
+    UHealthComponent* HealthComponent;
 
 protected:
     virtual void BeginPlay() override;

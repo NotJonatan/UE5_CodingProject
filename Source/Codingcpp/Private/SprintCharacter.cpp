@@ -56,6 +56,9 @@ ASprintCharacter::ASprintCharacter()
     //{
     //    GetMesh()->SetAnimClass(AnimBPClass.Class);
     //}
+
+    HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+
 }
 
 void ASprintCharacter::BeginPlay()
