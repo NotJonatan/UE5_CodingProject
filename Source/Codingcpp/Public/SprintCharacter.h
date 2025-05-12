@@ -8,54 +8,59 @@
 #include "InputActionValue.h"            // <<–– for FInputActionValue
 #include "InputMappingContext.h"
 #include "InputAction.h"
-
-//#include "EnhancedInputComponent.h"
-//#include "EnhancedInputSubsystems.h"
+#include "SprintCharacter.generated.h"
 
 
+class USpringArmComponent;
+class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 
-#include "SprintCharacter.generated.h"
-
-UCLASS()
+UCLASS(config = Game)
 class CODINGCPP_API ASprintCharacter : public ACharacter
 {
     GENERATED_BODY()
 
-public:
-    ASprintCharacter();
+    /** Camera boom positioning the camera behind the character */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    USpringArmComponent* CameraBoom;
+
+    /** Follow camera */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    UCameraComponent* FollowCamera;
+
+    // Enhanced Input assets (assign these in your SprintCharacter BP)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputMappingContext* DefaultMappingContext;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Move;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Look;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Jump;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Sprint;
+
+    // Sprint speeds
+    UPROPERTY(EditDefaultsOnly, Category = "Sprint")
+    float WalkSpeed = 600.f;
+    UPROPERTY(EditDefaultsOnly, Category = "Sprint")
+    float SprintSpeed = 1200.f;
 
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-    //–– Input callbacks ––
+    // Input callbacks
     void MoveInput(const FInputActionValue& Value);
     void LookInput(const FInputActionValue& Value);
     void StartSprinting(const FInputActionValue& Value);
     void StopSprinting(const FInputActionValue& Value);
 
-    //–– Sprint speeds ––
-    UPROPERTY(EditDefaultsOnly, Category = "Sprint")
-    float WalkSpeed = 600.f;
+public:
+    ASprintCharacter();
 
-    UPROPERTY(EditDefaultsOnly, Category = "Sprint")
-    float SprintSpeed = 1200.f;
-
-    //–– Enhanced Input assets (assign in BP) ––
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-    UInputMappingContext* DefaultMappingContext;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-    UInputAction* IA_Move;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-    UInputAction* IA_Look;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-    UInputAction* IA_Jump;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-    UInputAction* IA_Sprint;
+    // Expose camera components
+    FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+    FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };

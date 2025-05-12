@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 using System.IO;
 using UnrealBuildTool;
@@ -14,7 +14,18 @@ public class Codingcpp : ModuleRules
         PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
 
         PublicDependencyModuleNames.AddRange(new string[] {
-            "Core","CoreUObject","Engine","InputCore","EnhancedInput"
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+            "EnhancedInput", 
+            "AnimationCore",      // for AnimInstance
+            "AnimGraphRuntime"    // if you ever use graph‐driven nodes
+        });
+
+        // If you use any BlueprintLibrary math calls:
+        PrivateDependencyModuleNames.AddRange(new string[] {
+            "Kismet"
         });
     }
 }
