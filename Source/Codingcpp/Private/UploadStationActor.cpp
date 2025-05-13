@@ -1,39 +1,29 @@
 // Source/Codingcpp/Private/UploadStationActor.cpp
-#include "UploadStationActor.h"    // first include!
+#include "UploadStationActor.h"
 #include "Components/BoxComponent.h"
 #include "InventoryComponent.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/Pawn.h"
+#include "HardDriveActor.h"
 
 AUploadStationActor::AUploadStationActor()
 {
-    TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
-    RootComponent = TriggerBox;
-
-    TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AUploadStationActor::OnBoxOverlap);
+	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
+	RootComponent = TriggerBox;
 }
 
-void AUploadStationActor::BeginPlay()
+void AUploadStationActor::Interact_Implementation(AActor* Interactor)
 {
-    Super::BeginPlay();
-}
-
-void AUploadStationActor::OnBoxOverlap(
-    UPrimitiveComponent* /*OverlappedComp*/,
-    AActor* OtherActor,
-    UPrimitiveComponent* /*OtherComp*/,
-    int32 /*OtherBodyIndex*/,
-    bool /*bFromSweep*/,
-    const FHitResult& /*Sweep*/
-)
-{
-    if (ACharacter* Char = Cast<ACharacter>(OtherActor))
-    {
-        if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
-        {
-            if (Inv->HasDrive())
-            {
-                OnUploadCompleted.Broadcast();
-            }
-        }
-    }
+	if (APawn* Pawn = Cast<APawn>(Interactor))
+	{
+		if (UInventoryComponent* Inv = Pawn->FindComponentByClass<UInventoryComponent>())
+		{
+			// Upload & destroy all drives
+			for (AHardDriveActor* Drive : Inv->GetHardDrives())
+			{
+				// Your upload logic here...
+				Drive->Destroy();
+			}
+			Inv->ClearDrives();
+		}
+	}
 }

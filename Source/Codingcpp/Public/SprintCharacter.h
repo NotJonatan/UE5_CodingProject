@@ -9,6 +9,7 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "HealthComponent.h"        // at the top
+#include "InteractableInterface.h"
 #include "SprintCharacter.generated.h"
 
 
@@ -62,6 +63,9 @@ protected:
     void LookInput(const FInputActionValue& Value);
     void StartSprinting(const FInputActionValue& Value);
     void StopSprinting(const FInputActionValue& Value);
+
+    /** Called when player presses Interact */
+    void DoInteract();
 
 public:
     ASprintCharacter();

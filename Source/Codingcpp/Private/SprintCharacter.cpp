@@ -10,6 +10,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "InteractableInterface.h"
 #include "GameFramework/PlayerController.h"
 
 //DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -94,6 +95,10 @@ void ASprintCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
         // Sprint
         EIC->BindAction(IA_Sprint, ETriggerEvent::Started, this, &ASprintCharacter::StartSprinting);
         EIC->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &ASprintCharacter::StopSprinting);
+        
+        //Interact
+
+        PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASprintCharacter::DoInteract);
     }
 }
 
@@ -141,4 +146,23 @@ void ASprintCharacter::StartSprinting(const FInputActionValue& /*Value*/)
 void ASprintCharacter::StopSprinting(const FInputActionValue& /*Value*/)
 {
     GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void ASprintCharacter::DoInteract()
+{
+    FVector Start = FollowCamera->GetComponentLocation();
+    FVector End = Start + (FollowCamera->GetForwardVector() * 300.f);
+    FHitResult Hit;
+    FCollisionQueryParams Params(NAME_None, false, this);
+
+    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    {
+        AActor* HitActor = Hit.GetActor();
+        if (HitActor && HitActor->GetClass()->ImplementsInterface
+        (UInteractableInterface::StaticClass()))
+        {
+            // calls the blueprint/native implementation
+            IInteractableInterface::Execute_Interact(HitActor, this);
+        }
+    }
 }
