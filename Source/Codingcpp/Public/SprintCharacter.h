@@ -10,6 +10,8 @@
 #include "InputAction.h"
 #include "HealthComponent.h"        // at the top
 #include "InteractableInterface.h"
+#include "MRMovementTypes.h"               // <-- add
+#include "MRCharacterMovementComponent.h"  // <-- add
 #include "SprintCharacter.generated.h"
 
 
@@ -49,6 +51,13 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
     float SprintSpeed = 1200.f;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MR|Movement", meta = (AllowPrivateAccess = "true"))
+    UMRCharacterMovementComponent * MRMovement = nullptr;
+    
+           /* Design-time speeds in one place */
+    UPROPERTY(EditDefaultsOnly, Category = "MR|Movement")
+    FMRMovementSettings MovementSettings;
+
 //private:
     // in your character class body:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
@@ -68,7 +77,7 @@ protected:
     void DoInteract();
 
 public:
-    ASprintCharacter();
+    ASprintCharacter(const FObjectInitializer& ObjectInitializer);
 
     // Expose camera components
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

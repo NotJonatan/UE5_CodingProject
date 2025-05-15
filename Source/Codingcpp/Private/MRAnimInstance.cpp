@@ -1,42 +1,37 @@
-// Source/Codingcpp/Private/MRAnimInstance.cpp
 #include "MRAnimInstance.h"
+#include "MRCharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
 
 void UMRAnimInstance::NativeInitializeAnimation()
 {
-    PawnOwner = TryGetPawnOwner();
-    if (PawnOwner)
-    {
-        MoveComp = PawnOwner->FindComponentByClass<UCharacterMovementComponent>();
-    }
+    OwnerPawn = TryGetPawnOwner();
+    if (OwnerPawn)
+        MoveComp = Cast<UMRCharacterMovementComponent>(OwnerPawn->GetMovementComponent());
+    LastRot = OwnerPawn ? OwnerPawn->GetActorRotation() : FRotator::ZeroRotator;
 }
 
-void UMRAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+void UMRAnimInstance::NativeUpdateAnimation(float DT)
 {
-    // if we haven’t cached yet, try again
-    if (!PawnOwner)
-    {
-        PawnOwner = TryGetPawnOwner();
-    }
-    if (!MoveComp && PawnOwner)
-    {
-        MoveComp = PawnOwner->FindComponentByClass<UCharacterMovementComponent>();
-    }
+    if (!OwnerPawn) OwnerPawn = TryGetPawnOwner();
+    if (!OwnerPawn) return;
 
-    if (!PawnOwner || !MoveComp)
-    {
-        return;
-    }
+    if (!MoveComp) MoveComp = Cast<UMRCharacterMovementComponent>(OwnerPawn->GetMovementComponent());
 
-    // horizontal speed
-    FVector Vel = PawnOwner->GetVelocity();
-    Vel.Z = 0.f;
-    Speed = Vel.Size();
+    /* ---- locomotion ---- */
+    GroundSpeed = OwnerPawn->GetVelocity().Size2D();
+    bIsInAir = MoveComp ? MoveComp->IsFalling() : false;
+    Gait = MoveComp ? MoveComp->GetCurrentGait() : EGait::Walk;
 
-    // in-air?
-    bIsInAir = MoveComp->IsFalling();
+    /* ---- rotate-in-place / lean ---- */
+    const FRotator CurRot = OwnerPawn->GetActorRotation();
+    const float DeltaYaw = UKismetMathLibrary::NormalizedDeltaRotator(CurRot, LastRot).Yaw;
+    const float TargetYawPerSec = DeltaYaw / DT;
 
-    // direction relative to facing
-    Direction = CalculateDirection(Vel, PawnOwner->GetActorRotation());
+    // Smooth for nicer animation curves
+    YawDelta = FMath::FInterpTo(YawDelta, TargetYawPerSec, DT, 6.f);
+    Lean = FMath::Clamp(YawDelta / 360.f, -1.f, 1.f);
+
+    LastRot = CurRot;
 }

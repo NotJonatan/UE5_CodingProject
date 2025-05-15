@@ -1,13 +1,10 @@
-// Source/Codingcpp/Public/MRAnimInstance.h
-#pragma once
+﻿#pragma once
+#include "CoreMinimal.h"                     // 1️⃣  always first
+#include "Animation/AnimInstance.h"          // 2️⃣  base-class header
+#include "MRMovementTypes.h"                 //     (for EGait enum)
+#include "MRAnimInstance.generated.h"        // 3️⃣  always last
 
-#include "CoreMinimal.h"
-#include "Animation/AnimInstance.h"
-#include "MRAnimInstance.generated.h"
-
-// forward decls so the pointers compile
-class APawn;
-class UCharacterMovementComponent;
+class UMRCharacterMovementComponent;
 
 UCLASS()
 class CODINGCPP_API UMRAnimInstance : public UAnimInstance
@@ -18,21 +15,16 @@ public:
     virtual void NativeInitializeAnimation() override;
     virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
-protected:
-    // speed along the ground
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-    float Speed = 0.f;
-
-    // movement direction in degrees
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-    float Direction = 0.f;
-
-    // are we currently in the air?
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-    bool bIsInAir = false;
+    /* ---- Read-only to the AnimGraph ---- */
+    UPROPERTY(BlueprintReadOnly, Category = "MR|Anim") float GroundSpeed = 0.f;
+    UPROPERTY(BlueprintReadOnly, Category = "MR|Anim") bool  bIsInAir = false;
+    UPROPERTY(BlueprintReadOnly, Category = "MR|Anim") float YawDelta = 0.f;   // deg / sec
+    UPROPERTY(BlueprintReadOnly, Category = "MR|Anim") float Lean = 0.f;   // -1↔1
+    UPROPERTY(BlueprintReadOnly, Category = "MR|Anim") EGait Gait = EGait::Walk;
 
 private:
-    // cache the pawn & its movement component
-    APawn* PawnOwner = nullptr;
-    UCharacterMovementComponent* MoveComp = nullptr;
+    // cached
+    APawn* OwnerPawn = nullptr;
+    UMRCharacterMovementComponent* MoveComp = nullptr;
+    FRotator LastRot = FRotator::ZeroRotator;
 };

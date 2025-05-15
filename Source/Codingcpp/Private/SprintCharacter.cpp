@@ -11,13 +11,23 @@
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
 #include "InteractableInterface.h"
+#include "MRCharacterMovementComponent.h"    // add
 #include "GameFramework/PlayerController.h"
 
 //DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 
-ASprintCharacter::ASprintCharacter()
+ASprintCharacter::ASprintCharacter(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer.SetDefaultSubobjectClass<UMRCharacterMovementComponent>(
+        ACharacter::CharacterMovementComponentName))
 {
+
+    MRMovement = Cast<UMRCharacterMovementComponent>(GetCharacterMovement());
+    MRMovement->RotationRate = FRotator(0.f, 540.f, 0.f);
+    MRMovement->JumpZVelocity = 700.f;
+    MRMovement->MaxWalkSpeed = MovementSettings.RunSpeed;
+    MRMovement->BrakingDecelerationWalking = 2048.f;
+
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -30,13 +40,13 @@ ASprintCharacter::ASprintCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
 
-    // Movement defaults
-    GetCharacterMovement()->JumpZVelocity = 700.f;
-    GetCharacterMovement()->AirControl = 0.35f;
-    GetCharacterMovement()->MaxWalkSpeed = 500.f;
-    GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-    GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-    GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+    //// Movement defaults Hotkeys - CTRL + K + C OR CTRL + K and again CTRL + C. Undo with CTROL + K and CTRL + U
+    //GetCharacterMovement()->JumpZVelocity = 700.f;
+    //GetCharacterMovement()->AirControl = 0.35f;
+    //GetCharacterMovement()->MaxWalkSpeed = 500.f;
+    //GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
+    //GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+    //GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
     // Camera boom
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
