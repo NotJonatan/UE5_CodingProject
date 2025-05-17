@@ -42,6 +42,14 @@
 		{
 			"Name": "Cargo",
 			"Enabled": false
+		},
+		{
+			"Name": "PoseSearch",
+			"Enabled": true
+		},
+		{
+			"Name": "MotionTrajectory",
+			"Enabled": true
 		}
 	]
 }
