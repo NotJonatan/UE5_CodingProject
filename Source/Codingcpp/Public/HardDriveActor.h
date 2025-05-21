@@ -1,44 +1,45 @@
-// Source/Codingcpp/Public/HardDriveActor.h
+﻿// HardDriveActor.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "InteractableInterface.h"
 #include "HardDriveActor.generated.h"
 
-class USphereComponent;
+    // ── forward-declarations ──────────────────────────
 class UStaticMeshComponent;
+class UBoxComponent;
 
 UCLASS()
-class CODINGCPP_API AHardDriveActor : public AActor, public IInteractableInterface
+class CODINGCPP_API AHardDriveActor : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AHardDriveActor();
-
-	/** IInteractableInterface */
-	virtual void Interact_Implementation(AActor* Interactor) override;
+    AHardDriveActor();
 
 protected:
-	virtual void BeginPlay() override;
+    // Components
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HardDrive")
+    UStaticMeshComponent* Mesh = nullptr;
 
-	/** Sphere for detecting pickups */
-	UPROPERTY(VisibleAnywhere, Category = "Pickup")
-	USphereComponent* PickupSphere;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HardDrive")
+    UBoxComponent* TriggerBox = nullptr;
 
-	/** Visual mesh */
-	UPROPERTY(VisibleAnywhere, Category = "Pickup")
-	UStaticMeshComponent* MeshComp;
+    // AActor interface
+    virtual void BeginPlay() override;
 
-	/** Called on overlap */
-	UFUNCTION()
-	void OnSphereOverlap(
-		UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult
-	);
+    /* Trigger delegates ---------------------------------------------------- */
+    UFUNCTION()
+    void OnTriggerEnter(UPrimitiveComponent* OverlappedComp,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComp,
+        int32                OtherBodyIndex,
+        bool                 bFromSweep,
+        const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnTriggerExit(UPrimitiveComponent* OverlappedComp,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComp,
+        int32                OtherBodyIndex);
 };

@@ -1,42 +1,35 @@
-// Source/Codingcpp/Public/InventoryComponent.h
+// InventoryComponent.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "InventoryComponent.generated.h"
 
+/* forward declaration to avoid circular include */
 class AHardDriveActor;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHardDriveAdded, AHardDriveActor*, Drive);
+
+#include "InventoryComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CODINGCPP_API UInventoryComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UInventoryComponent();
+    UInventoryComponent();
 
-	/** Add a drive to our inventory (if not already present) */
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void AddDrive(AHardDriveActor* Drive);
+    /* ---------------- inventory API ---------------- */
 
-	/** True if inventory has at least one drive */
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool HasDrive() const;
+    /** Add a drive to the player’s list (called from AHardDriveActor) */
+    void AddHardDrive(AHardDriveActor* Drive);
 
-	/** Broadcast when a drive is added */
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-	FOnHardDriveAdded OnHardDriveAdded;
+    /** Empty the list when the player uses an upload-station */
+    void UploadAllDrives();
 
-	/** Read-only access to the internal array */
-	const TArray<AHardDriveActor*>& GetHardDrives() const { return HardDrives; }
+    /** Has the player stepped into an upload station’s trigger? */
+    UPROPERTY(BlueprintReadWrite, Category = "Inventory")
+    bool bInUploadRange = false;
 
-	/** Remove all drives (called after upload) */
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void ClearDrives();
-
-protected:
-	/** Under-the-hood storage */
-	UPROPERTY()
-	TArray<AHardDriveActor*> HardDrives;
+    /** Drives currently carried by the player */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+    TArray<AHardDriveActor*> HardDrives;
 };

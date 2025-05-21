@@ -8,6 +8,9 @@
 #include "InputActionValue.h"            // <<–– for FInputActionValue
 #include "InputMappingContext.h"
 #include "InputAction.h"
+
+
+#include "InventoryComponent.h"
 #include "HealthComponent.h"        // at the top
 #include "InteractableInterface.h"
 #include "MRMovementTypes.h"               // <-- add
@@ -24,6 +27,10 @@ UCLASS(config = Game)
 class CODINGCPP_API ASprintCharacter : public ACharacter
 {
     GENERATED_BODY()
+
+    /* Inventory component the player carries around */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+    UInventoryComponent* Inventory;
 
     /** Camera boom positioning the camera behind the character */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))

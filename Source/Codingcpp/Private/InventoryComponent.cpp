@@ -1,27 +1,27 @@
-// Source/Codingcpp/Private/InventoryComponent.cpp
+﻿// InventoryComponent.cpp
 #include "InventoryComponent.h"
-#include "HardDriveActor.h"
+#include "HardDriveActor.h"          // needs the forward-declared class
 
 UInventoryComponent::UInventoryComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UInventoryComponent::AddDrive(AHardDriveActor* Drive)
+/* ------------------------------------------------------------------------- */
+void UInventoryComponent::AddHardDrive(AHardDriveActor* Drive)
 {
-	if (Drive && !HardDrives.Contains(Drive))
-	{
-		HardDrives.Add(Drive);
-		OnHardDriveAdded.Broadcast(Drive);
-	}
+    if (Drive && !HardDrives.Contains(Drive))
+    {
+        HardDrives.Add(Drive);
+        UE_LOG(LogTemp, Log, TEXT("Drive picked up – total now: %d"), HardDrives.Num());
+    }
 }
 
-bool UInventoryComponent::HasDrive() const
+void UInventoryComponent::UploadAllDrives()
 {
-	return HardDrives.Num() > 0;
-}
-
-void UInventoryComponent::ClearDrives()
-{
-	HardDrives.Empty();
+    if (HardDrives.Num() > 0)
+    {
+        HardDrives.Empty();
+        UE_LOG(LogTemp, Log, TEXT("All drives uploaded – inventory cleared"));
+    }
 }
