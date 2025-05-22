@@ -1,34 +1,54 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "RailSlideComponent.h"
+#include "RailSplineActor.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
-// Sets default values for this component's properties
 URailSlideComponent::URailSlideComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = false; // manual tick
 }
 
-
-// Called when the game starts
 void URailSlideComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
+	if (ACharacter* C = Cast<ACharacter>(GetOwner()))
+	{
+		MoveComp = C->GetCharacterMovement();
+	}
 }
 
-
-// Called every frame
-void URailSlideComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+bool URailSlideComponent::TryStartSlide(ARailSplineActor* Rail, float StartAlpha)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (!Rail || bSliding || !MoveComp) return false;
 
-	// ...
+	bSliding = true;
+	CurrentRail = Rail;
+	SlideAlpha = FMath::Clamp(StartAlpha, 0.f, 1.f);
+
+	MoveComp->SetMovementMode(MOVE_Flying);         // simple: disable gravity
+	return true;
 }
 
+void URailSlideComponent::TickSlide(float DeltaTime)
+{
+	if (!bSliding || !CurrentRail) return;
+
+	SlideAlpha += (SlideSpeed / CurrentRail->GetSpline()->GetSplineLength()) * DeltaTime;
+
+	FVector Loc, Tan;
+	CurrentRail->GetPoint(SlideAlpha, Loc, Tan);
+
+	GetOwner()->SetActorLocation(Loc);
+	GetOwner()->SetActorRotation(Tan.Rotation());
+
+	if (SlideAlpha >= 1.f) EndSlide();
+}
+
+void URailSlideComponent::EndSlide()
+{
+	if (!bSliding) return;
+	bSliding = false;
+	CurrentRail = nullptr;
+
+	if (MoveComp) MoveComp->SetMovementMode(MOVE_Walking);
+}

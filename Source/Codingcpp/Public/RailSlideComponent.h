@@ -1,28 +1,38 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "RailSlideComponent.generated.h"
 
+class ARailSplineActor;
+class UCharacterMovementComponent;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Movement), meta = (BlueprintSpawnableComponent))
 class CODINGCPP_API URailSlideComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
+public:
 	URailSlideComponent();
 
+	/** Call when player presses the “grind” key near a rail. */
+	bool TryStartSlide(ARailSplineActor* Rail, float StartAlpha);
+
+	/** To be ticked from owning pawn */
+	void TickSlide(float DeltaTime);
+
+	/** Breaks the slide immediately */
+	void EndSlide();
+
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+private:
+	UPROPERTY()
+	ARailSplineActor* CurrentRail = nullptr;
 
-		
+	float SlideAlpha = 0.f;
+	float SlideSpeed = 600.f;     // units per second along spline
+	bool  bSliding = false;
+
+	UCharacterMovementComponent* MoveComp = nullptr;
 };

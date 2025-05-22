@@ -12,15 +12,14 @@ class CODINGCPP_API ARailSplineActor : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ARailSplineActor();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	/** Returns location+tangent for a given alpha [0-1] */
+	void GetPoint(float Alpha, FVector& OutLoc, FVector& OutTangent) const;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	USplineComponent* GetSpline() const { return RailSpline; }
 
+private:
+	UPROPERTY(VisibleAnywhere, Category = "Rail")
+	USplineComponent* RailSpline;
 };
