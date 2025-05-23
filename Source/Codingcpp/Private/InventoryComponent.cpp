@@ -17,11 +17,12 @@ void UInventoryComponent::AddHardDrive(AHardDriveActor* Drive)
     }
 }
 
-void UInventoryComponent::UploadAllDrives()
+int32 UInventoryComponent::UploadAllDrives()
 {
-    if (HardDrives.Num() > 0)
-    {
-        HardDrives.Empty();
-        UE_LOG(LogTemp, Log, TEXT("All drives uploaded – inventory cleared"));
-    }
+    const int32 Count = HardDrives.Num();
+    HardDrives.Empty();
+
+    // any extra logic you want…
+
+    return Count;
 }

@@ -25,6 +25,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HardDrive")
     UBoxComponent* TriggerBox = nullptr;
 
+
     // AActor interface
     virtual void BeginPlay() override;
 

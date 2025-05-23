@@ -108,8 +108,7 @@ void ASprintCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
         EIC->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &ASprintCharacter::StopSprinting);
         
         //Interact
-
-        PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASprintCharacter::DoInteract);
+        EIC->BindAction(IA_Interact,ETriggerEvent::Started, this, &ASprintCharacter::DoInteract);
     }
 }
 
@@ -174,6 +173,18 @@ void ASprintCharacter::DoInteract()
         {
             // calls the blueprint/native implementation
             IInteractableInterface::Execute_Interact(HitActor, this);
+        }
+    }
+
+    // Fallback: if we’re **inside an UploadStation trigger** -------------
+    if (Inventory && Inventory->bInUploadRange)
+    {
+        const int32 Num = Inventory->UploadAllDrives();
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(
+                -1, 2.f, FColor::Yellow,
+                FString::Printf(TEXT("Uploaded %d drive(s)!"), Num));
         }
     }
 }

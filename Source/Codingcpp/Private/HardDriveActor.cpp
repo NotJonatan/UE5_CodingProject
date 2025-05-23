@@ -1,34 +1,38 @@
-﻿// HardDriveActor.cpp
-#include "HardDriveActor.h"              // ← ALWAYS include your own header first
+﻿// Source/Codingcpp/Private/HardDriveActor.cpp
+#include "HardDriveActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
-#include "SprintCharacter.h"             // for the player class (forward declared in .h)
+#include "SprintCharacter.h"
 #include "InventoryComponent.h"
-
-// ─────────────────────────────────────────────────────────────────────────────
+#include "Engine/Engine.h"
 
 AHardDriveActor::AHardDriveActor()
 {
-    /* Root & mesh --------------------------------------------------------- */
-    Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-    RootComponent = Mesh;
+	PrimaryActorTick.bCanEverTick = false;
 
-    /* Trigger box --------------------------------------------------------- */
-    TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
-    TriggerBox->SetupAttachment(RootComponent);
-    TriggerBox->InitBoxExtent(FVector(20.f));
+	/* Root mesh --------------------------------------------------------- */
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	SetRootComponent(Mesh);
 
-    // Register delegates
-    TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AHardDriveActor::OnTriggerEnter);
-    TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AHardDriveActor::OnTriggerExit);
+	/* Trigger box ------------------------------------------------------- */
+	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
+	TriggerBox->SetupAttachment(RootComponent);
+	TriggerBox->SetBoxExtent(FVector(20.f));
+	TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	/* Delegate bindings ------------------------------------------------- */
+	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AHardDriveActor::OnTriggerEnter);
+	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AHardDriveActor::OnTriggerExit);
 }
 
 void AHardDriveActor::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 }
 
-/* ── Overlap handlers ────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────── */
 void AHardDriveActor::OnTriggerEnter(UPrimitiveComponent* /*OverlappedComp*/,
     AActor* OtherActor,
     UPrimitiveComponent* /*OtherComp*/,
@@ -40,30 +44,27 @@ void AHardDriveActor::OnTriggerEnter(UPrimitiveComponent* /*OverlappedComp*/,
     {
         if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
         {
-            Inv->AddHardDrive(this);             // your own function
-            SetActorHiddenInGame(true);          // make it vanish after pickup
+            Inv->AddHardDrive(this);          // <-- call; no return value to test
+
+            /* Feedback -------------------------------------------------- */
+            if (GEngine)
+            {
+                GEngine->AddOnScreenDebugMessage(
+                    -1, 2.f, FColor::Green, TEXT("Picked up Hard-Drive"));
+            }
+
+            /* Hide / disable the actor so it can’t be picked twice ------ */
             SetActorEnableCollision(false);
-
-
+            SetActorHiddenInGame(true);
         }
     }
-
-    //if (GEngine)
-    //{
-    //    GEngine->AddOnScreenDebugMessage(
-    //        -1,                           // key (-1 = new line)
-    //        2.f,                          // time on screen
-    //        FColor::Green,
-    //        TEXT("Picked up Hard-Drive!") // message
-    //    );
-    //}
 }
 
 
 void AHardDriveActor::OnTriggerExit(UPrimitiveComponent* /*OverlappedComp*/,
-    AActor*              /*OtherActor*/,
-    UPrimitiveComponent* /*OtherComp*/,
-    int32                /*OtherBodyIndex*/)
+	AActor*              /*OtherActor*/,
+	UPrimitiveComponent* /*OtherComp*/,
+	int32                /*OtherBodyIndex*/)
 {
-    /* nothing to do here – left empty intentionally                        */
+	// Nothing needed here for now
 }

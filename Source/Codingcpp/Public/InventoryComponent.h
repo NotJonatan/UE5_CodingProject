@@ -22,8 +22,9 @@ public:
     /** Add a drive to the player’s list (called from AHardDriveActor) */
     void AddHardDrive(AHardDriveActor* Drive);
 
-    /** Empty the list when the player uses an upload-station */
-    void UploadAllDrives();
+    /** Upload everything currently in the drive array, return # uploaded */
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    int32 UploadAllDrives();  // <-- single, final declaration
 
     /** Has the player stepped into an upload station’s trigger? */
     UPROPERTY(BlueprintReadWrite, Category = "Inventory")
@@ -32,4 +33,6 @@ public:
     /** Drives currently carried by the player */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
     TArray<AHardDriveActor*> HardDrives;
+
+
 };

@@ -1,9 +1,12 @@
-// Source/Codingcpp/Private/UploadStationActor.cpp
+﻿// Source/Codingcpp/Private/UploadStationActor.cpp
 #include "UploadStationActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Character.h"
 #include "InventoryComponent.h"
+#include "Engine/Engine.h"
+#include "MidnightRushGameMode.h"
+
 
 AUploadStationActor::AUploadStationActor()
 {
@@ -17,7 +20,7 @@ AUploadStationActor::AUploadStationActor()
 	TriggerBox->SetBoxExtent(FVector(60.f));
 	TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
-	TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	TriggerBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 }
 
 void AUploadStationActor::BeginPlay()
@@ -30,13 +33,27 @@ void AUploadStationActor::BeginPlay()
 		this, &AUploadStationActor::OnTriggerExit);
 }
 
+/* -- player pressed E -- */
 void AUploadStationActor::Interact_Implementation(AActor* Interactor)
 {
-	if (ACharacter* Char = Cast<ACharacter>(Interactor))
+	if (const ACharacter* Char = Cast<ACharacter>(Interactor))
 	{
 		if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
 		{
-			Inv->UploadAllDrives();      // <-- implement inside InventoryComponent
+			const int32 Uploaded = Inv->UploadAllDrives();
+
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1, 2.f, FColor::Yellow,
+					FString::Printf(TEXT("Pressed E – uploaded %d drive(s)"), Uploaded));
+			}
+
+			if (AMidnightRushGameMode* GM =
+				GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
+			{
+				GM->AddUploaded(Uploaded);
+			}
 		}
 	}
 }
@@ -54,6 +71,13 @@ void AUploadStationActor::OnTriggerEnter(
 		if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
 		{
 			Inv->bInUploadRange = true;  // flag used by the player to enable UI prompt
+
+			if (GEngine)
+				{
+				GEngine->AddOnScreenDebugMessage(
+					-1, 1.5f, FColor::Cyan,
+					TEXT("Press Interact to upload drives"));
+				}
 		}
 	}
 }
@@ -62,8 +86,9 @@ void AUploadStationActor::OnTriggerExit(
 	UPrimitiveComponent* /*OverlappedComp*/,
 	AActor* OtherActor,
 	UPrimitiveComponent* /*OtherComp*/,
-	int32                /*OtherBodyIndex*/)
+	int32 /*OtherBodyIndex*/)
 {
+
 	if (ACharacter* Char = Cast<ACharacter>(OtherActor))
 	{
 		if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
@@ -71,15 +96,4 @@ void AUploadStationActor::OnTriggerExit(
 			Inv->bInUploadRange = false;
 		}
 	}
-
-	//if (GEngine)
-	//{
-	//	const int32 Num = InvComp->UploadAllDrives();
-	//	GEngine->AddOnScreenDebugMessage(
-	//		-1,
-	//		2.f,
-	//		FColor::Yellow,
-	//		FString::Printf(TEXT("Uploaded %d drive(s)!"), Num)
-	//	);
-	//}
 }

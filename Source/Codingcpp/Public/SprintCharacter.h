@@ -52,11 +52,14 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* IA_Sprint;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Interact;
+
     // Sprint speeds
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
-    float WalkSpeed = 600.f;
+    float WalkSpeed = 300.f;
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
-    float SprintSpeed = 1200.f;
+    float SprintSpeed = 600.f;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MR|Movement", meta = (AllowPrivateAccess = "true"))
     UMRCharacterMovementComponent * MRMovement = nullptr;
