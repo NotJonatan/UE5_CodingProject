@@ -1,54 +1,74 @@
 #include "RailSlideComponent.h"
 #include "RailSplineActor.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/SplineComponent.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 URailSlideComponent::URailSlideComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false; // manual tick
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void URailSlideComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	if (ACharacter* C = Cast<ACharacter>(GetOwner()))
+}
+
+void URailSlideComponent::StartSliding(ARailSplineActor* RailActor)
+{
+	if (!RailActor) return;
+
+	// grab the spline
+	CurrentSpline = RailActor->GetSplineComponent();
+	CurrentDistance = 0.f;
+
+	// start our recurring timer
+	GetWorld()->GetTimerManager().SetTimer(
+		SlideTimerHandle,
+		this,
+		&URailSlideComponent::HandleSlide,
+		TickInterval,
+		true
+	);
+}
+
+void URailSlideComponent::StopSliding()
+{
+	if (GetWorld())
 	{
-		MoveComp = C->GetCharacterMovement();
+		GetWorld()->GetTimerManager().ClearTimer(SlideTimerHandle);
 	}
+	CurrentSpline = nullptr;
 }
 
-bool URailSlideComponent::TryStartSlide(ARailSplineActor* Rail, float StartAlpha)
+void URailSlideComponent::HandleSlide()
 {
-	if (!Rail || bSliding || !MoveComp) return false;
+	if (!CurrentSpline)
+	{
+		StopSliding();
+		return;
+	}
 
-	bSliding = true;
-	CurrentRail = Rail;
-	SlideAlpha = FMath::Clamp(StartAlpha, 0.f, 1.f);
+	// advance our distance
+	CurrentDistance += SlideSpeed * TickInterval;
 
-	MoveComp->SetMovementMode(MOVE_Flying);         // simple: disable gravity
-	return true;
-}
+	// check for end of spline
+	const float SplineLen = CurrentSpline->GetSplineLength();
+	if (CurrentDistance >= SplineLen)
+	{
+		StopSliding();
+		return;
+	}
 
-void URailSlideComponent::TickSlide(float DeltaTime)
-{
-	if (!bSliding || !CurrentRail) return;
+	// compute new location & rotation
+	FVector NewLoc = CurrentSpline->GetLocationAtDistanceAlongSpline(
+		CurrentDistance, ESplineCoordinateSpace::World);
+	FRotator NewRot = CurrentSpline->GetRotationAtDistanceAlongSpline(
+		CurrentDistance, ESplineCoordinateSpace::World);
 
-	SlideAlpha += (SlideSpeed / CurrentRail->GetSpline()->GetSplineLength()) * DeltaTime;
-
-	FVector Loc, Tan;
-	CurrentRail->GetPoint(SlideAlpha, Loc, Tan);
-
-	GetOwner()->SetActorLocation(Loc);
-	GetOwner()->SetActorRotation(Tan.Rotation());
-
-	if (SlideAlpha >= 1.f) EndSlide();
-}
-
-void URailSlideComponent::EndSlide()
-{
-	if (!bSliding) return;
-	bSliding = false;
-	CurrentRail = nullptr;
-
-	if (MoveComp) MoveComp->SetMovementMode(MOVE_Walking);
+	// apply to owner
+	if (AActor* Owner = GetOwner())
+	{
+		Owner->SetActorLocationAndRotation(NewLoc, NewRot);
+	}
 }

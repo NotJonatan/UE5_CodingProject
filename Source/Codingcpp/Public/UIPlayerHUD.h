@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBlueprint.h"
+#include "GameFramework/HUD.h"
 #include "UIPlayerHUD.generated.h"
 
 

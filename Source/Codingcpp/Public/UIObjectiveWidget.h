@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBlueprint.h"
+#include "Blueprint/UserWidget.h"
 #include "UIObjectiveWidget.generated.h"
 
 UCLASS()

@@ -20,12 +20,15 @@ public class Codingcpp : ModuleRules
             "InputCore",
             "EnhancedInput", 
             "AnimationCore",      // for AnimInstance
-            "AnimGraphRuntime"    // if you ever use graph‐driven nodes
+            "AnimGraphRuntime",    // if you ever use graph‐driven nodes
+            "Niagara",
+            "UMG"
         });
 
         // If you use any BlueprintLibrary math calls:
         PrivateDependencyModuleNames.AddRange(new string[] {
-            "Kismet"
+            "Kismet",
+            "Niagara"
         });
     }
 }

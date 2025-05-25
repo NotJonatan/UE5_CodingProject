@@ -1,17 +1,30 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "RailSplineActor.h"
 #include "Components/SplineComponent.h"
+//#include "Engine/World.h"  // for UWorld if you ever need it
+
 
 ARailSplineActor::ARailSplineActor()
 {
+	PrimaryActorTick.bCanEverTick = false;
+
+	// Create & wire up the spline
 	RailSpline = CreateDefaultSubobject<USplineComponent>(TEXT("RailSpline"));
 	SetRootComponent(RailSpline);
 }
 
-void ARailSplineActor::GetPoint(float Alpha, FVector& OutLoc, FVector& OutTangent) const
+USplineComponent* ARailSplineActor::GetSplineComponent() const
 {
-	if (!RailSpline) { OutLoc = OutTangent = FVector::ZeroVector; return; }
-	const float Distance = RailSpline->GetSplineLength() * FMath::Clamp(Alpha, 0.f, 1.f);
-	OutLoc = RailSpline->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
-	OutTangent = RailSpline->GetTangentAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+    return RailSpline;
+}
+
+int32 ARailSplineActor::GetNumberOfPoints() const
+{
+    return RailSpline ? RailSpline->GetNumberOfSplinePoints() : 0;
+}
+
+FVector ARailSplineActor::GetPointLocation(int32 PointIndex) const
+{
+    return RailSpline
+        ? RailSpline->GetLocationAtSplinePoint(PointIndex, ESplineCoordinateSpace::World)
+        : FVector::ZeroVector;
 }

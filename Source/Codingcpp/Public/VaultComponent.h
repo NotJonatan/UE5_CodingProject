@@ -2,17 +2,22 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Engine/World.h"
 #include "VaultComponent.generated.h"
 
-UCLASS(ClassGroup = (Movement), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CODINGCPP_API UVaultComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	bool TryVault(const FVector& ForwardCheckOrigin);
+    UVaultComponent();
 
-private:
-	UPROPERTY(EditDefaultsOnly) float MaxVaultHeight = 120.f;
-	UPROPERTY(EditDefaultsOnly) float VaultSpeed = 800.f;
+protected:
+    virtual void BeginPlay() override;
+    virtual void TickComponent(
+        float DeltaTime,
+        ELevelTick TickType,
+        FActorComponentTickFunction* ThisTickFunction
+    ) override;
 };

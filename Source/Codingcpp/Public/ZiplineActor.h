@@ -17,11 +17,14 @@ public:
 
 	FVector GetStart() const { return LineStart; }
 	FVector GetEnd()   const { return LineEnd; }
+	virtual void Tick(float DeltaTime) override;
 
-private:
+protected:
 	UPROPERTY(VisibleAnywhere) UStaticMeshComponent* Cable;
 	UPROPERTY(VisibleAnywhere) UBoxComponent* Trigger;
 
 	UPROPERTY(EditInstanceOnly) FVector LineStart;
 	UPROPERTY(EditInstanceOnly) FVector LineEnd;
+
+
 };
