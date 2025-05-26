@@ -7,6 +7,9 @@
 // Delegate for broadcasting health changes: (NewHealth, Delta)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, NewHealth, float, HealthDelta);
 
+/** Fires once when health hits 0 (Blueprint-assignable) */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CODINGCPP_API UHealthComponent : public UActorComponent
 {
@@ -34,6 +37,9 @@ public:
     /** Heal this component (clamped ≤MaxHealth) */
     UFUNCTION(BlueprintCallable, Category = "Health")
     void Heal(float HealAmount);
+
+    UPROPERTY(BlueprintAssignable, Category = "Health")
+    FOnDeathSignature OnDeath;
 
 protected:
     virtual void BeginPlay() override;

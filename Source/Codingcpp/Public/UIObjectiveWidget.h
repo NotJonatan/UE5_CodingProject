@@ -18,4 +18,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent) 
 	void HideUploadProgress();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowHealth(float HealthPercent);     // 0-100
 };

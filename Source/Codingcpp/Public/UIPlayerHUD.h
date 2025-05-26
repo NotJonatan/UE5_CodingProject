@@ -17,14 +17,17 @@ class CODINGCPP_API AMRHUD : public AHUD
 
 protected:
 	virtual void BeginPlay() override;
+
+	/* delegate handlers */
 	UFUNCTION() void HandleOverallProgress(int32 Current, int32 Goal);
-	//UFUNCTION() void HandleStationProgress(int32 StationID, int32 Uploaded, int32 Goal);
-	UFUNCTION() void HideProgress();
+	UFUNCTION() void HandleHealth(float NewHealth, float Delta);
+	UFUNCTION() void HideUploadBar();
+
+private:
 	FTimerHandle HideTimer;
 
-	UPROPERTY()
-	class UObjectiveWidget* ObjectiveWidget;
+	UPROPERTY() UObjectiveWidget* ObjectiveWidget = nullptr;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UObjectiveWidget> ObjectiveWidgetClass;
 };

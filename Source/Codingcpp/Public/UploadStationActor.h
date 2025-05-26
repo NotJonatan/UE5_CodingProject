@@ -22,7 +22,7 @@ public:
 	/* IInteractableInterface */
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
-	UPROPERTY(EditInstanceOnly, Category = "Station")
+	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category = "Station")
 	int32 StationID = 0;    // 0,1,2 in your three placed actors
 
 	// NEW editable setting

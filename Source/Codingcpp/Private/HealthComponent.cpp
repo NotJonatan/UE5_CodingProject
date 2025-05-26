@@ -1,4 +1,4 @@
-#include "HealthComponent.h"
+﻿#include "HealthComponent.h"
 #include "GameFramework/Actor.h"
 
 UHealthComponent::UHealthComponent()
@@ -13,7 +13,7 @@ void UHealthComponent::BeginPlay()
     // Initialize health
     CurrentHealth = MaxHealth;
 
-    // Bind to the owner�s damage event
+    // Bind to the owner’s damage event
     if (AActor* Owner = GetOwner())
     {
         Owner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeAnyDamage);
@@ -38,6 +38,16 @@ void UHealthComponent::TakeDamage(float DamageAmount)
     CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.f, MaxHealth);
     const float Delta = CurrentHealth - OldHealth;
     OnHealthChanged.Broadcast(CurrentHealth, Delta);
+
+    /* ─── NEW ─── */
+    if (CurrentHealth <= 0.f)
+    {
+        OnDeath.Broadcast();               // BP listeners
+        if (AActor* Owner = GetOwner())
+        {
+            Owner->Destroy();              // remove actor from world
+        }
+    }
 }
 
 void UHealthComponent::Heal(float HealAmount)
