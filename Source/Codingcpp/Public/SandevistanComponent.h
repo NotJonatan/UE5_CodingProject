@@ -28,7 +28,7 @@ public:
 	UNiagaraSystem* VFXSystem = nullptr;
 
 	/** Optional overlay PP-material (drag in the material instance) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VFX")
 	UNiagaraComponent* VFXComponent = nullptr;
 
 
