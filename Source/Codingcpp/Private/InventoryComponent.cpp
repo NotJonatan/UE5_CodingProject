@@ -26,3 +26,9 @@ int32 UInventoryComponent::UploadAllDrives()
 
     return Count;
 }
+
+void UInventoryComponent::ConsumeHardDrives(int32 Amount)
+{
+    Amount = FMath::Min(Amount, HardDrives.Num());
+    HardDrives.RemoveAt(/*StartIdx=*/0, Amount, /*bAllowShrinking=*/true);
+}

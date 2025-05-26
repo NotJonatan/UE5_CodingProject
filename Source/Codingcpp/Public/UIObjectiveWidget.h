@@ -12,6 +12,10 @@ class CODINGCPP_API UObjectiveWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnUploadedProgress(int32 Current, int32 Goal);
+
+	UFUNCTION(BlueprintImplementableEvent) 
+	void ShowUploadProgress(float Percent);
+
+	UFUNCTION(BlueprintImplementableEvent) 
+	void HideUploadProgress();
 };

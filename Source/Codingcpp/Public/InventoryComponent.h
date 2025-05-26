@@ -34,5 +34,19 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
     TArray<AHardDriveActor*> HardDrives;
 
+    /** Current number of drives the player holds */
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    int32 GetHardDriveCount() const { return HardDrives.Num(); }
+
+    /** True if the player holds at least Amount drives */
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    bool HasRequiredDrives(int32 Amount) const
+    {
+        return HardDrives.Num() >= Amount;
+    }
+
+    /** Removes the first Amount drives from the array */
+    void ConsumeHardDrives(int32 Amount);
+
 
 };

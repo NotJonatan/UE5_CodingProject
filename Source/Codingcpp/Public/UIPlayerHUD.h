@@ -17,12 +17,14 @@ class CODINGCPP_API AMRHUD : public AHUD
 
 protected:
 	virtual void BeginPlay() override;
+	UFUNCTION() void HandleOverallProgress(int32 Current, int32 Goal);
+	//UFUNCTION() void HandleStationProgress(int32 StationID, int32 Uploaded, int32 Goal);
+	UFUNCTION() void HideProgress();
+	FTimerHandle HideTimer;
 
-	UPROPERTY(EditDefaultsOnly) TSubclassOf<UObjectiveWidget> ObjectiveWidgetClass;
+	UPROPERTY()
+	class UObjectiveWidget* ObjectiveWidget;
 
-private:
-	UPROPERTY() UObjectiveWidget* ObjectiveWidget = nullptr;
-
-	UFUNCTION()
-	void HandleProgress(int32 Current, int32 Goal);
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UObjectiveWidget> ObjectiveWidgetClass;
 };

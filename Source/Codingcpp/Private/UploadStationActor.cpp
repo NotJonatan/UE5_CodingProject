@@ -27,36 +27,45 @@ void AUploadStationActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TriggerBox->OnComponentBeginOverlap.AddDynamic(
-		this, &AUploadStationActor::OnTriggerEnter);
-	TriggerBox->OnComponentEndOverlap.AddDynamic(
-		this, &AUploadStationActor::OnTriggerExit);
+	//TriggerBox->OnComponentBeginOverlap.AddDynamic(
+	//	this, &AUploadStationActor::OnTriggerEnter);
+	//TriggerBox->OnComponentEndOverlap.AddDynamic(
+	//	this, &AUploadStationActor::OnTriggerExit);
 }
 
 /* -- player pressed E -- */
-void AUploadStationActor::Interact_Implementation(AActor* Interactor)
+void AUploadStationActor::Interact_Implementation(AActor* Interactor)   // ← call this from the player’s “E” key
 {
-	if (const ACharacter* Char = Cast<ACharacter>(Interactor))
+	if (bActivated) return;          // already finished
+
+	// Grab the inventory on the pawn
+	UInventoryComponent* Inv = Interactor->FindComponentByClass<UInventoryComponent>();
+	if (!Inv) return;
+
+	// Gate: player must hold 3 drives
+	if (!Inv->HasRequiredDrives(DrivesRequired))
 	{
-		if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
+		// Optional: GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Yellow,
+		//        TEXT("Need 3 drives to upload here!"));
+		return;
+	}
+
+	// ***** REQUIREMENT MET – do the upload burst *****
+	Inv->ConsumeHardDrives(DrivesRequired);
+
+	if (AMidnightRushGameMode* GM = GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
+	{
+		// Add all three drives to this station’s tally.
+		for (int32 i = 0; i < DrivesRequired; ++i)
 		{
-			const int32 Uploaded = Inv->UploadAllDrives();
-
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(
-					-1, 2.f, FColor::Yellow,
-					FString::Printf(TEXT("Pressed E – uploaded %d drive(s)"), Uploaded));
-			}
-
-			if (AMidnightRushGameMode* GM =
-				GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
-			{
-				GM->AddUploaded(Uploaded);
-			}
+			GM->AddUploaded(DrivesRequired);
 		}
 	}
+
+	bActivated = true;               // lock this station
+	// Play success VFX / SFX here…
 }
+
 
 void AUploadStationActor::OnTriggerEnter(
 	UPrimitiveComponent* /*OverlappedComp*/,

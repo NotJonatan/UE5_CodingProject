@@ -22,6 +22,15 @@ public:
 	/* IInteractableInterface */
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
+	UPROPERTY(EditInstanceOnly, Category = "Station")
+	int32 StationID = 0;    // 0,1,2 in your three placed actors
+
+	// NEW editable setting
+	UPROPERTY(EditDefaultsOnly, Category = "Station")
+	int32 DrivesRequired = 3;
+
+	bool bActivated = false;            // becomes true after first (and only) upload burst
+
 protected:
 	virtual void BeginPlay() override;
 
