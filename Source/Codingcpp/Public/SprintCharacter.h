@@ -55,6 +55,9 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* IA_Interact;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Fire;
+
     // Sprint speeds
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
     float WalkSpeed = 300.f;
@@ -72,6 +75,9 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     // in your character class body:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
     UHealthComponent* HealthComponent;
+
+    //UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    //UShooterComponent* Shooter;
 
 protected:
     virtual void BeginPlay() override;

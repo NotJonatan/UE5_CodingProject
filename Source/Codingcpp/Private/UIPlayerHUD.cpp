@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 #include "UIPlayerHUD.h"
 #include "UIObjectiveWidget.h"
 #include "MidnightRushGameMode.h"
@@ -22,9 +22,12 @@ void AMRHUD::BeginPlay()
         }
     }
 
-     // Bind drive progress / win
+     // Bind drive progress and win/fail condition
     if (auto* GM = GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
+    {
         GM->OnUploadedProgress.AddDynamic(this, &AMRHUD::HandleOverallProgress);
+        //GM->OnGameLost.AddDynamic(this, &AMRHUD::ShowEndScreenFail); // FAIL WIDGET, IMPLEMENT WHEN I HAVE CREATED IT
+    }
 
     // Bind global progress (0-9)
     if (auto* GM = GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
@@ -57,13 +60,14 @@ void AMRHUD::BeginPlay()
 void AMRHUD::HandleOverallProgress(int32 Current, int32 Goal)
 {
     if (!ObjectiveWidget) return;
-    const float Percent = static_cast<float>(Current) / Goal;
-    ObjectiveWidget->ShowUploadProgress(Percent);
 
-    /* hide after 1 s when full */
+    const float Percent = static_cast<float>(Current) / Goal;
+    ObjectiveWidget->ShowUploadProgress(Percent);   // bar
+    ObjectiveWidget->ShowDriveCount(Current, Goal); // text
+
     if (Percent >= 1.f)
-        GetWorld()->GetTimerManager().SetTimer(
-            HideTimer, this, &AMRHUD::HideUploadBar, 1.f, false);
+        GetWorld()->GetTimerManager()
+        .SetTimer(HideTimer, this, &AMRHUD::HideUploadBar, 1.f, false);
 }
 
 // hide upload bar

@@ -71,6 +71,9 @@ ASprintCharacter::ASprintCharacter(const FObjectInitializer& ObjectInitializer)
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 
     Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+
+    //Shooter = CreateDefaultSubobject<UShooterComponent>("Shooter");
+
 }
 
 void ASprintCharacter::BeginPlay()

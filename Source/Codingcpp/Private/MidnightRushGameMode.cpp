@@ -13,3 +13,8 @@ void AMidnightRushGameMode::AddUploaded(int32 Amount)
         OnGoalReached.Broadcast();
     }
 }
+
+void AMidnightRushGameMode::NotifyPlayerDied()          //
+{
+    OnGameLost.Broadcast();
+}

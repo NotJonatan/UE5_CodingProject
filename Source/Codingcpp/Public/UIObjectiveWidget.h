@@ -21,4 +21,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowHealth(float HealthPercent);     // 0-100
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowDriveCount(int32 Current, int32 Goal);
 };

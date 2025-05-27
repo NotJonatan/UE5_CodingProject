@@ -1,5 +1,7 @@
 ﻿#include "HealthComponent.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "MidnightRushGameMode.h"
 
 UHealthComponent::UHealthComponent()
 {
@@ -34,22 +36,26 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* /*DamagedActor*/, float Damag
 
 void UHealthComponent::TakeDamage(float DamageAmount)
 {
-    const float OldHealth = CurrentHealth;
+    const float Old = CurrentHealth;
     CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.f, MaxHealth);
-    const float Delta = CurrentHealth - OldHealth;
+    const float Delta = CurrentHealth - Old;
     OnHealthChanged.Broadcast(CurrentHealth, Delta);
 
-    /* ─── NEW ─── */
+    /* ─── death check ─── */
     if (CurrentHealth <= 0.f)
     {
-        OnDeath.Broadcast();               // BP listeners
         if (AActor* Owner = GetOwner())
         {
-            Owner->Destroy();              // remove actor from world
+            if (AMidnightRushGameMode* GM =
+                Owner->GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
+            {
+                GM->NotifyPlayerDied();
+            }
+
+            Owner->Destroy();
         }
     }
 }
-
 void UHealthComponent::Heal(float HealAmount)
 {
     const float OldHealth = CurrentHealth;

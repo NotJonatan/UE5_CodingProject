@@ -6,6 +6,7 @@
 
 class UStaticMeshComponent;
 class UBoxComponent;
+class ACharacter;
 
 UCLASS()
 class CODINGCPP_API AZiplineActor : public AActor
@@ -15,16 +16,40 @@ class CODINGCPP_API AZiplineActor : public AActor
 public:
 	AZiplineActor();
 
-	FVector GetStart() const { return LineStart; }
-	FVector GetEnd()   const { return LineEnd; }
-	virtual void Tick(float DeltaTime) override;
+    /** World-space start / end of the cable */
+    UPROPERTY(EditAnywhere, Category = "Zipline")
+    FVector LineStart = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, Category = "Zipline")
+    FVector LineEnd = FVector(0.f, 0.f, 300.f);
+
+    /** Units/second the rider moves */
+    UPROPERTY(EditDefaultsOnly, Category = "Zipline")
+    float SlideSpeed = 900.f;
 
 protected:
-	UPROPERTY(VisibleAnywhere) UStaticMeshComponent* Cable;
-	UPROPERTY(VisibleAnywhere) UBoxComponent* Trigger;
+    virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditInstanceOnly) FVector LineStart;
-	UPROPERTY(EditInstanceOnly) FVector LineEnd;
+    /** Trigger overlap entry */
+    UFUNCTION()
+    void BeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* Other,
+        UPrimitiveComponent* OtherComp, int32 BodyIndex,
+        bool bFromSweep, const FHitResult& SweepResult);
 
+    /** Helpers */
+    FORCEINLINE FVector GetPoint(float Alpha) const
+    {
+        return FMath::Lerp(LineStart, LineEnd, Alpha);
+    }
 
+    /* Components */
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* Cable;
+
+    UPROPERTY(VisibleAnywhere)
+    UBoxComponent* Trigger;
+
+    /* Runtime state */
+    ACharacter* RidingChar = nullptr;
+    float       Progress = 0.f;          // 0-1 along cable
 };
