@@ -4,37 +4,43 @@
 #include "GameFramework/Actor.h"
 #include "EnemySpawner.generated.h"
 
+// forward-declare APawn so we don’t need the full header here
+class APawn;
+
 UCLASS()
 class CODINGCPP_API AEnemySpawner : public AActor
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    AEnemySpawner();
+	AEnemySpawner();
 
 protected:
-    virtual void BeginPlay() override;
+	virtual void BeginPlay() override;
 
-    /** Which enemy Blueprints to pick from */
-    UPROPERTY(EditAnywhere, Category = "Spawning")
-    TArray<TSubclassOf<AActor>> EnemyClasses;
+	// this actually does the spawn
+	void SpawnOne();
 
-    /** Total number of enemies to spawn */
-    UPROPERTY(EditAnywhere, Category = "Spawning", meta = (ClampMin = "1"))
-    int32 SpawnCount = 1;
+	// keep track of how many we’ve made
+	int32 SpawnedSoFar = 0;
 
-    /** Seconds between each spawn when using interval */
-    UPROPERTY(EditAnywhere, Category = "Spawning", meta = (ClampMin = "0.0"))
-    float SpawnInterval = 0.5f;
+	// timer handle if you do interval spawns
+	FTimerHandle TimerHandle_Spawn;
 
-    /** If true, will space them out by SpawnInterval; if false, spawns all at once */
-    UPROPERTY(EditAnywhere, Category = "Spawning")
-    bool bUseSpawnInterval = true;
+public:
+	// **Which Pawn Blueprints to pick from**  
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TArray<TSubclassOf<APawn>> EnemyClasses;
 
-private:
-    int32 SpawnedSoFar = 0;
-    FTimerHandle TimerHandle_Spawn;
+	// **Total to spawn** (if not using interval, we’ll spawn them all at BeginPlay)
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	int32 SpawnCount = 5;
 
-    /** Called by timer to actually do one spawn */
-    void SpawnOne();
+	// **Turn on/off interval spawning**  
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	bool bUseInterval = true;
+
+	// **If interval is on, how many seconds between each spawn**  
+	UPROPERTY(EditAnywhere, Category = "Spawning", meta = (EditCondition = "bUseInterval"))
+	float SpawnInterval = 2.f;
 };

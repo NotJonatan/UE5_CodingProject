@@ -1,65 +1,44 @@
 #include "MovingPlatform.h"
-#include "Components/StaticMeshComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/DamageType.h"             // your chosen damage type header
+#include "Engine/World.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AMovingPlatform::AMovingPlatform()
 {
-    PrimaryActorTick.bCanEverTick = true;
-
-    PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>("PlatformMesh");
-    RootComponent = PlatformMesh;
-
-    // enable overlap events
-    SetActorEnableCollision(true);
-    OnActorBeginOverlap.AddDynamic(this, &AMovingPlatform::OnPlatformOverlap);
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AMovingPlatform::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    // capture world-space start, and interpret PointB as an offset
-    PointA = GetActorLocation();
-    PointB = PointA + PointB;
-    CurrentTarget = PointB;
+	StartLocation = GetActorLocation();
+	if (!TargetPoint)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[%s] has no TargetPoint set – it will not move."), *GetName());
+	}
 }
 
 void AMovingPlatform::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 
-    FVector NewLocation = FMath::VInterpConstantTo(
-        GetActorLocation(),
-        CurrentTarget,
-        DeltaTime,
-        MoveSpeed
-    );
-    SetActorLocation(NewLocation);
+	if (!TargetPoint) return;
 
-    SwapTargetIfNeeded();
-}
+	// decide which point to head to
+	const FVector CurrentLoc = GetActorLocation();
+	const FVector GoalLoc = bGoingToTarget
+		? TargetPoint->GetActorLocation()
+		: StartLocation;
 
-void AMovingPlatform::SwapTargetIfNeeded()
-{
-    if (FVector::DistSquared(GetActorLocation(), CurrentTarget) < FMath::Square(10.f))
-    {
-        CurrentTarget = (CurrentTarget == PointA) ? PointB : PointA;
-    }
-}
+	// move a little toward it
+	const FVector Dir = (GoalLoc - CurrentLoc).GetSafeNormal();
+	const FVector NewLoc = CurrentLoc + Dir * Speed * DeltaTime;
+	SetActorLocation(NewLoc);
 
-void AMovingPlatform::OnPlatformOverlap(AActor* OverlappedActor, AActor* OtherActor)
-{
-    if (ACharacter* Char = Cast<ACharacter>(OtherActor))
-    {
-        // apply damage once per overlap
-        UGameplayStatics::ApplyDamage(
-            Char,
-            DamageAmount,
-            nullptr,            // instigator
-            this,               // damage causer
-            DamageType
-        );
-    }
+	// if we're close enough, flip
+	const float Dist = FVector::Dist(CurrentLoc, GoalLoc);
+	if (Dist < Threshold)
+	{
+		bGoingToTarget = !bGoingToTarget;
+	}
 }

@@ -1,18 +1,29 @@
+// Source/Codingcpp/Private/SandevistanPickup.cpp
+
 #include "SandevistanPickup.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/Character.h"
 #include "InventoryComponent.h"
+#include "Engine/Engine.h"               // for GEngine
+#include "Kismet/GameplayStatics.h"      // for UGameplayStatics
+#include "GameFramework/Character.h"     // for ASprintCharacter cast
+#include "SprintCharacter.h"             // for ActivateSandevistan() call
+
 
 ASandevistanPickup::ASandevistanPickup()
 {
     PrimaryActorTick.bCanEverTick = false;
-
+    // collision
     CollisionComp = CreateDefaultSubobject<USphereComponent>("CollisionComp");
     CollisionComp->InitSphereRadius(75.f);
     CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
     CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    CollisionComp->SetGenerateOverlapEvents(true);                  // <— make sure overlaps are enabled
+    //CollisionComp->OnComponentBeginOverlap.AddDynamic(              // this only works if we are only using the Onoverlap collsion. 
+        //this, &ASandevistanPickup::OnOverlap);
+
+
     RootComponent = CollisionComp;
 
     MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
@@ -22,24 +33,33 @@ ASandevistanPickup::ASandevistanPickup()
 void ASandevistanPickup::BeginPlay()
 {
     Super::BeginPlay();
-    CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASandevistanPickup::OnOverlap);
+
+
 }
 
-void ASandevistanPickup::OnOverlap(
-    UPrimitiveComponent* /*Overlapped*/,
-    AActor* OtherActor,
-    UPrimitiveComponent* /*OtherComp*/,
-    int32 /*OtherBodyIndex*/,
-    bool /*bFromSweep*/,
-    const FHitResult& /*Sweep*/
-)
+
+void ASandevistanPickup::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-    if (ACharacter* Char = Cast<ACharacter>(OtherActor))
+
+    if (GEngine)
     {
-        if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
-        {
-            Inv->AddSandevistanCharge();
-            Destroy();
-        }
+        GEngine->AddOnScreenDebugMessage(
+            -1, 2.f, FColor::Yellow,
+            TEXT("Sandevistan ready to be used for 1 time!"));
     }
+  Super::NotifyActorBeginOverlap(OtherActor);
+
+  if (ASprintCharacter* Player = Cast<ASprintCharacter>(OtherActor))
+  {
+    if (GEngine)
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
+        TEXT("Sandevistan ready to be used for 1 time!"));
+
+    if (SandevistanVFX)
+      UGameplayStatics::SpawnEmitterAtLocation(
+        GetWorld(), SandevistanVFX, Player->GetActorLocation());
+
+    Player->ActivateSandevistan();
+    Destroy();
+  }
 }

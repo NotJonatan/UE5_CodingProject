@@ -1,74 +1,42 @@
+// RailSlideComponent.cpp
 #include "RailSlideComponent.h"
 #include "RailSplineActor.h"
 #include "Components/SplineComponent.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
+#include "GameFramework/Actor.h"
 
 URailSlideComponent::URailSlideComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = true;
+    DistanceAlongSpline = 0.f;
 }
 
 void URailSlideComponent::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
+    DistanceAlongSpline = 0.f;
 }
 
-void URailSlideComponent::StartSliding(ARailSplineActor* RailActor)
+void URailSlideComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	if (!RailActor) return;
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// grab the spline
-	CurrentSpline = RailActor->GetSplineComponent();
-	CurrentDistance = 0.f;
+    if (!RailSplineActor || !RailSplineActor->RailSpline)
+    {
+        return;
+    }
 
-	// start our recurring timer
-	GetWorld()->GetTimerManager().SetTimer(
-		SlideTimerHandle,
-		this,
-		&URailSlideComponent::HandleSlide,
-		TickInterval,
-		true
-	);
-}
+    DistanceAlongSpline += SlideSpeed * DeltaTime;
+    const float SplineLength = RailSplineActor->RailSpline->GetSplineLength();
+    if (DistanceAlongSpline > SplineLength)
+    {
+        DistanceAlongSpline = SplineLength;
+    }
 
-void URailSlideComponent::StopSliding()
-{
-	if (GetWorld())
-	{
-		GetWorld()->GetTimerManager().ClearTimer(SlideTimerHandle);
-	}
-	CurrentSpline = nullptr;
-}
+    FVector NewLoc = RailSplineActor->RailSpline->GetLocationAtDistanceAlongSpline(DistanceAlongSpline, ESplineCoordinateSpace::World);
+    FRotator NewRot = RailSplineActor->RailSpline->GetRotationAtDistanceAlongSpline(DistanceAlongSpline, ESplineCoordinateSpace::World);
 
-void URailSlideComponent::HandleSlide()
-{
-	if (!CurrentSpline)
-	{
-		StopSliding();
-		return;
-	}
-
-	// advance our distance
-	CurrentDistance += SlideSpeed * TickInterval;
-
-	// check for end of spline
-	const float SplineLen = CurrentSpline->GetSplineLength();
-	if (CurrentDistance >= SplineLen)
-	{
-		StopSliding();
-		return;
-	}
-
-	// compute new location & rotation
-	FVector NewLoc = CurrentSpline->GetLocationAtDistanceAlongSpline(
-		CurrentDistance, ESplineCoordinateSpace::World);
-	FRotator NewRot = CurrentSpline->GetRotationAtDistanceAlongSpline(
-		CurrentDistance, ESplineCoordinateSpace::World);
-
-	// apply to owner
-	if (AActor* Owner = GetOwner())
-	{
-		Owner->SetActorLocationAndRotation(NewLoc, NewRot);
-	}
+    if (AActor* Owner = GetOwner())
+    {
+        Owner->SetActorLocationAndRotation(NewLoc, NewRot);
+    }
 }

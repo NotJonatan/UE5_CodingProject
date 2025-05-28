@@ -1,46 +1,35 @@
+// RailSlideComponent.h
 #pragma once
+
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "RailSlideComponent.generated.h"
 
 class ARailSplineActor;
-class USplineComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CODINGCPP_API URailSlideComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	URailSlideComponent();
-
-	virtual void BeginPlay() override;
-
-	/** Kick off sliding along the given rail */
-	void StartSliding(ARailSplineActor* RailActor);
-
-	/** Immediately stop sliding */
-	void StopSliding();
+    URailSlideComponent();
 
 protected:
-	/** Called each tick of our timer to advance along the spline */
-	void HandleSlide();
+    virtual void BeginPlay() override;
 
-	/** Movement speed along the rail (units/sec) */
-	UPROPERTY(EditAnywhere, Category = "RailSlide")
-	float SlideSpeed = 600.f;
+public:
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/** How often (seconds) to update our position */
-	UPROPERTY(EditAnywhere, Category = "RailSlide")
-	float TickInterval = 0.02f;
+    // The spline actor we slide along
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rail")
+    ARailSplineActor* RailSplineActor;
+
+    // Speed (units per second)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rail")
+    float SlideSpeed = 100.f;
 
 private:
-	/** The spline we’re currently riding */
-	USplineComponent* CurrentSpline = nullptr;
-
-	/** How far along (distance) we’ve already moved */
-	float CurrentDistance = 0.f;
-
-	/** Timer handle so we can cancel when we reach the end */
-	FTimerHandle SlideTimerHandle;
+    // Distance traveled along the spline
+    float DistanceAlongSpline;
 };

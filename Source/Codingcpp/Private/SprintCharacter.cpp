@@ -12,15 +12,16 @@
 #include "Engine/LocalPlayer.h"
 #include "InteractableInterface.h"
 #include "MRCharacterMovementComponent.h"    // add
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
-#include "DrawDebugHelpers.h" // Debugs
+#include "DrawDebugHelpers.h" // Debug
+#include "TimerManager.h"
 
 //DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 
 ASprintCharacter::ASprintCharacter(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer.SetDefaultSubobjectClass<UMRCharacterMovementComponent>(
-        ACharacter::CharacterMovementComponentName))
+    : Super(ObjectInitializer.SetDefaultSubobjectClass<UMRCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 
     MRMovement = Cast<UMRCharacterMovementComponent>(GetCharacterMovement());
@@ -82,6 +83,8 @@ void ASprintCharacter::BeginPlay()
     Super::BeginPlay();
     MRMovement = Cast<UMRCharacterMovementComponent>(GetCharacterMovement());
     check(MRMovement);
+
+    bIsSandevistanActive = false;
 
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
@@ -214,4 +217,33 @@ void ASprintCharacter::DoInteract()
         ? Hit.GetActor()->GetName()
         : TEXT("None");
     UE_LOG(LogTemp, Log, TEXT("[Interact] trace result: %s"), *NameStr);
+}
+
+void ASprintCharacter::ActivateSandevistan()
+{
+    if (bIsSandevistanActive)
+        return;
+
+    bIsSandevistanActive = true;
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    // Slow everything down
+    UGameplayStatics::SetGlobalTimeDilation(World, 0.2f);
+
+    // After Duration, call ResetTimeDilation
+    World
+        ->GetTimerManager()
+        .SetTimer(SandevistanTimerHandle, this, &ASprintCharacter::ResetTimeDilation,
+            SandevistanDuration, false);
+}
+
+void ASprintCharacter::ResetTimeDilation()
+{
+    UWorld* World = GetWorld();
+    if (World)
+        UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
+
+    // start cooldown timer if you like...
+    bIsSandevistanActive = false;
 }

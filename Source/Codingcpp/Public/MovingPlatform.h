@@ -4,9 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "MovingPlatform.generated.h"
 
-class UStaticMeshComponent;
-class UDamageType;
-
 UCLASS()
 class CODINGCPP_API AMovingPlatform : public AActor
 {
@@ -15,39 +12,26 @@ class CODINGCPP_API AMovingPlatform : public AActor
 public:
 	AMovingPlatform();
 
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 protected:
-	virtual void BeginPlay() override;
-
-	// -- visuals & collision --
-	UPROPERTY(VisibleAnywhere, Category = "Platform")
-	UStaticMeshComponent* PlatformMesh;
-
-	// -- back-&-forth movement points --
+	// Assign this in the editor to the “other” point you want to move toward.
 	UPROPERTY(EditInstanceOnly, Category = "Movement")
-	FVector PointA;
+	AActor* TargetPoint = nullptr;
 
-	UPROPERTY(EditInstanceOnly, Category = "Movement")
-	FVector PointB;
+	// Speed in units/sec
+	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ClampMin = "0.0"))
+	float Speed = 200.f;
 
-	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ClampMin = "1"))
-	float MoveSpeed = 200.f;
-
-	// -- damage settings --
-	UPROPERTY(EditAnywhere, Category = "Damage")
-	float DamageAmount = 20.f;
-
-	UPROPERTY(EditAnywhere, Category = "Damage")
-	TSubclassOf<UDamageType> DamageType;
+	// How close before flipping direction
+	UPROPERTY(EditAnywhere, Category = "Movement", meta = (ClampMin = "0.0"))
+	float Threshold = 10.f;
 
 private:
-	FVector CurrentTarget;
+	// Remember where we started
+	FVector StartLocation;
 
-	// swap end-points when we arrive
-	void SwapTargetIfNeeded();
-
-	// called when something overlaps the mesh
-	UFUNCTION()
-	void OnPlatformOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	// Which way are we heading?
+	bool bGoingToTarget = true;
 };

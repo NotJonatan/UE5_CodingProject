@@ -22,7 +22,8 @@ public class Codingcpp : ModuleRules
             "AnimationCore",      // for AnimInstance
             "AnimGraphRuntime",    // if you ever use graph‐driven nodes
             "Niagara",
-            "UMG"
+            "UMG",
+            "AIModule"
         });
 
         // If you use any BlueprintLibrary math calls:

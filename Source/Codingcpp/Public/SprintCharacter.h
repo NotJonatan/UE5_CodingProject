@@ -9,7 +9,9 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 
-
+#include "Engine/World.h"             // for UWorld, GetWorld()
+#include "GameFramework/WorldSettings.h" // for AWorldSettings
+#include "TimerManager.h"             // for FTimerManager
 #include "InventoryComponent.h"
 #include "HealthComponent.h"        // at the top
 #include "InteractableInterface.h"
@@ -22,6 +24,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class AWorldSettings;
 
 UCLASS(config = Game)
 class CODINGCPP_API ASprintCharacter : public ACharacter
@@ -73,13 +76,32 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
 
     //AUploadStationActor* StationInRange = nullptr;
 
-//private:
     // in your character class body:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
     UHealthComponent* HealthComponent;
 
     //UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     //UShooterComponent* Shooter;
+    public:
+
+        /** Activates the one‐time sandevistan effect */
+    UFUNCTION(BlueprintCallable, Category = "Sandevistan")
+    void ActivateSandevistan();
+
+    // Internal helper to restore normal time
+    UFUNCTION()
+    void ResetTimeDilation();
+
+    /** How long the slowdown lasts (seconds) */
+    UPROPERTY(EditAnywhere, Category = "Sandevistan")
+    float SandevistanDuration = 3.f;
+
+    /** Cooldown before you can use it again */
+    UPROPERTY(EditAnywhere, Category = "Sandevistan")
+    float SandevistanCooldown = 10.f;
+
+    // Track whether it’s already active
+    bool bIsSandevistanActive = false;
 
 protected:
     virtual void BeginPlay() override;
@@ -94,10 +116,13 @@ protected:
     /** Called when player presses Interact */
     void DoInteract();
 
-public:
+
     ASprintCharacter(const FObjectInitializer& ObjectInitializer);
 
     // Expose camera components
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
     FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+    /** Handle for our timer */
+    FTimerHandle SandevistanTimerHandle;
 };

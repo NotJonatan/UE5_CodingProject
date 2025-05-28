@@ -1,8 +1,12 @@
+// Source/Codingcpp/Private/HealthPickup.cpp
+
 #include "HealthPickup.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "HealthComponent.h"
+#include "Engine/Engine.h"                // << add this
+#include "InventoryComponent.h"
 
 AHealthPickup::AHealthPickup()
 {
@@ -13,6 +17,10 @@ AHealthPickup::AHealthPickup()
     CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
     CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    CollisionComp->SetGenerateOverlapEvents(true);                  // <— make sure overlaps are enabled
+    CollisionComp->OnComponentBeginOverlap.AddDynamic(
+        this, &AHealthPickup::OnOverlap);                           // <— bind your OnOverlap
+
     RootComponent = CollisionComp;
 
     MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
@@ -22,7 +30,7 @@ AHealthPickup::AHealthPickup()
 void AHealthPickup::BeginPlay()
 {
     Super::BeginPlay();
-    CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AHealthPickup::OnOverlap);
+
 }
 
 void AHealthPickup::OnOverlap(
@@ -34,6 +42,14 @@ void AHealthPickup::OnOverlap(
     const FHitResult& /*Sweep*/
 )
 {
+    if (GEngine)
+    {
+        // print to screen for 2 seconds in green
+        GEngine->AddOnScreenDebugMessage(
+            -1, 2.f, FColor::Green,
+            TEXT("Health restored by 50!!"));
+    }
+
     if (ACharacter* Char = Cast<ACharacter>(OtherActor))
     {
         if (UHealthComponent* HC = Char->FindComponentByClass<UHealthComponent>())

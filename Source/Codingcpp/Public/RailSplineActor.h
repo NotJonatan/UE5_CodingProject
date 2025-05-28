@@ -1,35 +1,36 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SplineComponent.h"
 #include "RailSplineActor.generated.h"
 
-class USplineComponenet;
+class USplineComponent;
+class USplineMeshComponent;
 
 UCLASS()
 class CODINGCPP_API ARailSplineActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-    ARailSplineActor();
 
-    /** The spline we ride along */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rail")
-    USplineComponent* RailSpline;
+public:
+	ARailSplineActor();
 
-    /** Public getter so other classes/components can grab the spline */
-    UFUNCTION(BlueprintCallable, Category = "Rail")
-    USplineComponent* GetSplineComponent() const;
+	// whenever you move spline points in the editor this will re‐build the rails
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-    /** Helper to ask “how many points” */
-    UFUNCTION(BlueprintCallable, Category = "Rail")
-    int32 GetNumberOfPoints() const;
+	// the spline you lay out in BP
+	UPROPERTY(VisibleAnywhere, Category = "Rail")
+	USplineComponent* RailSpline;
 
-    /** Helper to fetch the world‐space location at a given point */
-    UFUNCTION(BlueprintCallable, Category = "Rail")
-    FVector GetPointLocation(int32 PointIndex) const;
+	// pick your mesh in the details panel
+	UPROPERTY(EditAnywhere, Category = "Rail")
+	UStaticMesh* SegmentMesh;
+
+	// optional: pick a material if you want
+	UPROPERTY(EditAnywhere, Category = "Rail")
+	UMaterialInterface* SegmentMaterial;
+
+	// the runtime spline‐mesh components
+	UPROPERTY()
+	TArray<USplineMeshComponent*> SplineMeshes;
 };
