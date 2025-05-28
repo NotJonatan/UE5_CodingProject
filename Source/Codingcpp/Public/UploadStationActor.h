@@ -15,6 +15,7 @@ class UStaticMeshComponent;
 class UWidgetComponent;
 class UUploadProgressWidget;
 class UInventoryComponent;
+class AMidnightRushGameMode;
 
 
 UCLASS()

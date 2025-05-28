@@ -32,10 +32,13 @@ AUploadStationActor::AUploadStationActor()
 	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AUploadStationActor::OnTriggerExit);
 
 	//Progress Bar
-	ProgressComp = CreateDefaultSubobject<UWidgetComponent>("ProgressWidget");
+	ProgressComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ProgressWidget"));
 	ProgressComp->SetupAttachment(RootComponent);
-	ProgressComp->SetWidgetSpace(EWidgetSpace::Screen);          // or World
-	ProgressComp->SetDrawSize(FVector2D(120, 15));
+	ProgressComp->SetWidgetSpace(EWidgetSpace::Screen);
+	ProgressComp->SetDrawSize(FVector2D(120.f, 15.f));
+	// you can set the widget class here or in BeginPlay:
+	ProgressComp->SetWidgetClass(UUploadProgressWidget::StaticClass());
+	ProgressComp->SetVisibility(false);
 }
 
 void AUploadStationActor::BeginPlay()
@@ -49,26 +52,43 @@ void AUploadStationActor::BeginPlay()
 	//	this, &AUploadStationActor::OnTriggerExit);
 
 	ProgressComp->SetWidgetClass(UUploadProgressWidget::StaticClass());
-	ProgressWidget = Cast<UUploadProgressWidget>(ProgressComp->GetUserWidgetObject());
-	ProgressComp->SetVisibility(false);           // hidden until uploading
+	ProgressWidget = Cast<UUploadProgressWidget>(ProgressComp->GetUserWidgetObject());          // hidden until uploading
 }
 
 void AUploadStationActor::TickUpload()
 {
 	Elapsed += 0.05f;
-	const float Alpha = Elapsed / UploadDuration;   // 0→1
+	const float Alpha = Elapsed / UploadDuration;
 
-	if (ProgressWidget) ProgressWidget->SetProgress(Alpha);
+	if (ProgressWidget)
+	{
+		// update the *station’s* progress bar
+		ProgressWidget->ShowUploadProgress(Elapsed / UploadDuration);
+	}
 
 	if (Alpha >= 1.f)
 	{
+		// stop the station bar
 		GetWorldTimerManager().ClearTimer(UploadTimer);
 		ProgressComp->SetVisibility(false);
 		bUploading = false;
 		bActivated = true;
 
+		// **now** tell the GameMode this station finished
+		if (AMidnightRushGameMode* GM = GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
+		{
+			GM->RegisterUpload(StationID);
+		}
+
+		// hide the station bar completely (via your widget)
+		if (ProgressWidget)
+		{
+			ProgressWidget->HideUploadProgress();
+		}
 	}
 }
+
+
 /* -- player pressed E -- */
 void AUploadStationActor::Interact_Implementation(AActor* Interactor)
 {

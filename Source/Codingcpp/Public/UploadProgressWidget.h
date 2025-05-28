@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// UploadProgressWidget.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -13,13 +12,20 @@ class CODINGCPP_API UUploadProgressWidget : public UUserWidget
 {
     GENERATED_BODY()
 
-public:
-    /** 0-1 range */
-    UFUNCTION(BlueprintCallable)
-    void SetProgress(float InPercent);
-
 protected:
-    /** Bind to the ProgressBar you place in the WBP. */
+    // Called when this widget is constructed; cache our ProgressBar pointer
+    virtual void NativeConstruct() override;
+
+    // Bind to the ProgressBar you placed in your UMG Designer
     UPROPERTY(meta = (BindWidget))
-    UProgressBar* UploadBar = nullptr;
+    UProgressBar* UploadBar;
+
+public:
+    /** Show & update the bar (0.0 → 1.0) */
+    UFUNCTION(BlueprintCallable, Category = "Upload")
+    void ShowUploadProgress(float Percent);
+
+    /** Hide the bar when done or cancelled */
+    UFUNCTION(BlueprintCallable, Category = "Upload")
+    void HideUploadProgress();
 };

@@ -48,5 +48,24 @@ public:
     /** Removes the first Amount drives from the array */
     void ConsumeHardDrives(int32 Amount);
 
+    /** # of one-time Sandevistan uses the player holds */
+    UPROPERTY(BlueprintReadOnly, Category = "Sandevistan")
+    int32 SandevistanCharges = 0;
+
+    /** Call to grant one use */
+    UFUNCTION(BlueprintCallable, Category = "Sandevistan")
+    void AddSandevistanCharge() { ++SandevistanCharges; }
+
+    /** Attempt to consume one use */
+    UFUNCTION(BlueprintCallable, Category = "Sandevistan")
+    bool UseSandevistan()
+    {
+        if (SandevistanCharges > 0)
+        {
+            --SandevistanCharges;
+            return true;
+        }
+        return false;
+    }
 
 };
