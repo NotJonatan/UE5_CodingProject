@@ -3,18 +3,35 @@
 //#include "Codingcpp.h"                             // causes error if this isn't first library
 //#include "SprintCharacter.h"
 
-void AMidnightRushGameMode::AddUploaded(int32 Amount)
+void AMidnightRushGameMode::BeginPlay()
 {
-    NumUploaded += Amount;
+    Super::BeginPlay();
+    StationProgress.Init(0, NumStations);   //  [0,0,0]
+}
+
+void AMidnightRushGameMode::RegisterUpload(int32 StationID)
+{
+    if (!StationProgress.IsValidIndex(StationID)) return;
+
+    if (StationProgress[StationID] >= DrivesPerStation) return;   // already full
+
+    StationProgress[StationID] += 1;
+    NumUploaded += 1;
+
+    UE_LOG(LogTemp, Log, TEXT("[GM] Station %d ++  (%d / %d total)"),
+        StationID, NumUploaded, DrivesGoal);
+
     OnUploadedProgress.Broadcast(NumUploaded, DrivesGoal);
 
     if (NumUploaded >= DrivesGoal)
     {
-        OnGoalReached.Broadcast();
+        UE_LOG(LogTemp, Log, TEXT("[GM] All drives uploaded – WIN"));
+        // OnGoalReached.Broadcast();  // if you kept that delegate
     }
 }
 
-void AMidnightRushGameMode::NotifyPlayerDied()          //
+void AMidnightRushGameMode::NotifyPlayerDied()
 {
-    OnGameLost.Broadcast();
+    UE_LOG(LogTemp, Warning, TEXT("[GM] Player died – fail state"));
+    OnPlayerDied.Broadcast();       // does nothing if nobody bound
 }

@@ -1,13 +1,19 @@
-// Source/Codingcpp/Public/UploadStationActor.h
+﻿// Source/Codingcpp/Public/UploadStationActor.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractableInterface.h"
+//#include "UploadProgressWidget.h"
+//#include "Components/WidgetComponent.h"
+//#include "TimerManager.h"
 #include "UploadStationActor.generated.h"
 
+//Forward 
 class UBoxComponent;
 class UStaticMeshComponent;
+class UWidgetComponent;
+class UUploadProgressWidget;
 class UInventoryComponent;
 
 
@@ -22,36 +28,40 @@ public:
 	/* IInteractableInterface */
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
-	UPROPERTY(EditInstanceOnly,BlueprintReadWrite, Category = "Station")
-	int32 StationID = 0;    // 0,1,2 in your three placed actors
+	/** 0, 1 or 2 in the three placed actors */
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Station")
+	int32 StationID = 0;
 
-	// NEW editable setting
+	/** Drives the player must insert here */
 	UPROPERTY(EditDefaultsOnly, Category = "Station")
 	int32 DrivesRequired = 3;
 
-	bool bActivated = false;            // becomes true after first (and only) upload burst
-
 protected:
 	virtual void BeginPlay() override;
+	void TickUpload();					// ← timer callback
+
+	/* Trigger delegates */
+	UFUNCTION()
+	void OnTriggerEnter(UPrimitiveComponent* OverlappedComp, AActor* Other,
+		UPrimitiveComponent* OtherComp, int32 BodyIndex,
+		bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
-	void OnTriggerEnter(UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32                OtherBodyIndex,
-		bool                 bFromSweep,
-		const FHitResult& SweepResult);
+	void OnTriggerExit(UPrimitiveComponent* OverlappedComp, AActor* Other,
+		UPrimitiveComponent* OtherComp, int32 BodyIndex);
 
-	UFUNCTION()
-	void OnTriggerExit(UPrimitiveComponent* OverlappedComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32                OtherBodyIndex);
+	/* -- Upload runtime state -- */
+	UPROPERTY(EditDefaultsOnly, Category = "Upload")
+	float UploadDuration = 3.f;		// seconds for a full bar
 
-private:
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* StationMesh;
+	float		 Elapsed = 0.f;
+	bool		 bUploading = false;
+	bool		 bActivated = false;
+	FTimerHandle UploadTimer;
 
-	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* TriggerBox;
+	/* -- Components & widget -- */
+	UPROPERTY(VisibleAnywhere) UStaticMeshComponent* StationMesh = nullptr;
+	UPROPERTY(VisibleAnywhere) UBoxComponent* TriggerBox = nullptr;
+	UPROPERTY(VisibleAnywhere) UWidgetComponent* ProgressComp = nullptr;	// widget component
+	UUploadProgressWidget* ProgressWidget = nullptr;
 };

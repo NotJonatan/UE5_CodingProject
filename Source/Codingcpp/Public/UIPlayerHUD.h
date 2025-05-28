@@ -20,8 +20,11 @@ protected:
 
 	/* delegate handlers */
 	UFUNCTION() void HandleOverallProgress(int32 Current, int32 Goal);
-	UFUNCTION() void HandleHealth(float NewHealth, float Delta);
+
 	UFUNCTION() void HideUploadBar();
+
+	UFUNCTION() void HandleHealthChanged(float NewHealth, float Delta);
+
 
 private:
 	FTimerHandle HideTimer;

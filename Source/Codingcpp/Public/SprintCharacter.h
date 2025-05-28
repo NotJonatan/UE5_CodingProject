@@ -71,6 +71,8 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     UPROPERTY(EditDefaultsOnly, Category = "MR|Movement")
     FMRMovementSettings MovementSettings;
 
+    //AUploadStationActor* StationInRange = nullptr;
+
 //private:
     // in your character class body:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))

@@ -28,7 +28,9 @@ public class Codingcpp : ModuleRules
         // If you use any BlueprintLibrary math calls:
         PrivateDependencyModuleNames.AddRange(new string[] {
             "Kismet",
-            "Niagara"
+            "Niagara",
+            "Slate",
+            "SlateCore"
         });
     }
 }

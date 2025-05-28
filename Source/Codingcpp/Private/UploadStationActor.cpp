@@ -5,104 +5,122 @@
 #include "GameFramework/Character.h"
 #include "InventoryComponent.h"
 #include "Engine/Engine.h"
+#include "Components/WidgetComponent.h"          //   add
+#include "TimerManager.h"                        //   add
 #include "MidnightRushGameMode.h"
+#include "UploadProgressWidget.h"
+#include "Engine/World.h"
 
 
 AUploadStationActor::AUploadStationActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	StationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StationMesh"));
-	SetRootComponent(StationMesh);
+	StationMesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	RootComponent = StationMesh;
 
-	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
+	TriggerBox = CreateDefaultSubobject<UBoxComponent>("Trigger");
 	TriggerBox->SetupAttachment(RootComponent);
-	TriggerBox->SetBoxExtent(FVector(60.f));
+	TriggerBox->InitBoxExtent(FVector(100.f));
 	TriggerBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
-	TriggerBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	TriggerBox->SetGenerateOverlapEvents(true);
+
+	// BIND DELEGATES (don’t leave commented)
+	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AUploadStationActor::OnTriggerEnter);
+	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &AUploadStationActor::OnTriggerExit);
+
+	//Progress Bar
+	ProgressComp = CreateDefaultSubobject<UWidgetComponent>("ProgressWidget");
+	ProgressComp->SetupAttachment(RootComponent);
+	ProgressComp->SetWidgetSpace(EWidgetSpace::Screen);          // or World
+	ProgressComp->SetDrawSize(FVector2D(120, 15));
 }
 
 void AUploadStationActor::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//already set the overlap trigger boxes in the constructor. this isn't needed anymore
 	//TriggerBox->OnComponentBeginOverlap.AddDynamic(
 	//	this, &AUploadStationActor::OnTriggerEnter);
 	//TriggerBox->OnComponentEndOverlap.AddDynamic(
 	//	this, &AUploadStationActor::OnTriggerExit);
+
+	ProgressComp->SetWidgetClass(UUploadProgressWidget::StaticClass());
+	ProgressWidget = Cast<UUploadProgressWidget>(ProgressComp->GetUserWidgetObject());
+	ProgressComp->SetVisibility(false);           // hidden until uploading
 }
 
-/* -- player pressed E -- */
-void AUploadStationActor::Interact_Implementation(AActor* Interactor)   // ← call this from the player’s “E” key
+void AUploadStationActor::TickUpload()
 {
-	if (bActivated) return;          // already finished
+	Elapsed += 0.05f;
+	const float Alpha = Elapsed / UploadDuration;   // 0→1
 
-	// Grab the inventory on the pawn
-	UInventoryComponent* Inv = Interactor->FindComponentByClass<UInventoryComponent>();
-	if (!Inv) return;
+	if (ProgressWidget) ProgressWidget->SetProgress(Alpha);
 
-	// Gate: player must hold 3 drives
-	if (!Inv->HasRequiredDrives(DrivesRequired))
+	if (Alpha >= 1.f)
 	{
-		// Optional: GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Yellow,
-		//        TEXT("Need 3 drives to upload here!"));
-		return;
+		GetWorldTimerManager().ClearTimer(UploadTimer);
+		ProgressComp->SetVisibility(false);
+		bUploading = false;
+		bActivated = true;
+
 	}
-
-	// ***** REQUIREMENT MET – do the upload burst *****
-	Inv->ConsumeHardDrives(DrivesRequired);
-
-	if (AMidnightRushGameMode* GM = GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
-	{
-		// Add all three drives to this station’s tally.
-		for (int32 i = 0; i < DrivesRequired; ++i)
-		{
-			GM->AddUploaded(DrivesRequired);
-		}
-	}
-
-	bActivated = true;               // lock this station
-	// Play success VFX / SFX here…
 }
+/* -- player pressed E -- */
+void AUploadStationActor::Interact_Implementation(AActor* Interactor)
+{
+    UE_LOG(LogTemp, Log, TEXT("[Station] Interact called by %s"), *Interactor->GetName());
 
+    if (bActivated) return;
+
+    UInventoryComponent* Inv = Interactor->FindComponentByClass<UInventoryComponent>();
+    if (!Inv || !Inv->HasRequiredDrives(DrivesRequired)) return;
+
+    Inv->ConsumeHardDrives(DrivesRequired);
+
+    if (AMidnightRushGameMode* GM = GetWorld()->GetAuthGameMode<AMidnightRushGameMode>())
+    {
+        GM->RegisterUpload(StationID);      // single call increments all the delegates :contentReference[oaicite:0]{index=0}
+    }
+
+	/* kick-off upload */
+	bUploading = true;
+	Elapsed = 0.f;
+	ProgressComp->SetVisibility(true);
+	GetWorldTimerManager().SetTimer(
+		UploadTimer, this,
+		&AUploadStationActor::TickUpload,    /* function */
+		0.05f,                               /* 20 fps */
+		true);
+
+    bActivated = true;
+}
 
 void AUploadStationActor::OnTriggerEnter(
-	UPrimitiveComponent* /*OverlappedComp*/,
-	AActor* OtherActor,
-	UPrimitiveComponent* /*OtherComp*/,
-	int32                /*OtherBodyIndex*/,
-	bool                 /*bFromSweep*/,
-	const FHitResult&    /*SweepResult*/)
+	UPrimitiveComponent*, AActor* Other, UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
-	if (ACharacter* Char = Cast<ACharacter>(OtherActor))
+	if (ACharacter* Char = Cast<ACharacter>(Other))
 	{
 		if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
 		{
-			Inv->bInUploadRange = true;  // flag used by the player to enable UI prompt
+			Inv->bInUploadRange = true;              // << use Inv->
 
-			if (GEngine)
-				{
-				GEngine->AddOnScreenDebugMessage(
-					-1, 1.5f, FColor::Cyan,
-					TEXT("Press Interact to upload drives"));
-				}
+			UE_LOG(LogTemp, Log, TEXT("[Station] overlap enter by %s"), *Other->GetName());
 		}
 	}
 }
 
 void AUploadStationActor::OnTriggerExit(
-	UPrimitiveComponent* /*OverlappedComp*/,
-	AActor* OtherActor,
-	UPrimitiveComponent* /*OtherComp*/,
-	int32 /*OtherBodyIndex*/)
+	UPrimitiveComponent*, AActor* Other, UPrimitiveComponent*, int32)
 {
-
-	if (ACharacter* Char = Cast<ACharacter>(OtherActor))
+	if (ACharacter* Char = Cast<ACharacter>(Other))
 	{
 		if (UInventoryComponent* Inv = Char->FindComponentByClass<UInventoryComponent>())
 		{
-			Inv->bInUploadRange = false;
+			Inv->bInUploadRange = false;             // << use Inv->
 		}
 	}
 }

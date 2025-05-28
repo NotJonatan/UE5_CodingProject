@@ -24,4 +24,5 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowDriveCount(int32 Current, int32 Goal);
+
 };

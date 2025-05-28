@@ -8,6 +8,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUploadedProgress, int32, Current, int32, Goal);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGoalReached);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameLost);          //
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDied);
 
 UCLASS()
 class CODINGCPP_API AMidnightRushGameMode : public AGameModeBase
@@ -15,18 +16,28 @@ class CODINGCPP_API AMidnightRushGameMode : public AGameModeBase
     GENERATED_BODY()
 
 public:
-    /* called by stations */
-    void AddUploaded(int32 Amount);
+    /**  Called by a station when it successfully uploads one drive  */
+    UFUNCTION() void RegisterUpload(int32 StationID);
 
-    /* events the HUD binds to */
+    /**  Fires for global 0-9 progress  */
     UPROPERTY(BlueprintAssignable) FOnUploadedProgress OnUploadedProgress;
-    UPROPERTY(BlueprintAssignable) FOnGoalReached      OnGoalReached;
-    UPROPERTY(BlueprintAssignable) FOnGameLost         OnGameLost;       // 
 
-    /* damage reporting from HealthComponent */
-    void NotifyPlayerDied();                                            // 
+    UPROPERTY(BlueprintAssignable) FOnPlayerDied OnPlayerDied;
+
+    /*  Called by HealthComponent when player reaches 0 HP  */
+    UFUNCTION() void NotifyPlayerDied();
 
 protected:
+    virtual void BeginPlay() override;
+
+    UPROPERTY(EditDefaultsOnly) int32 DrivesPerStation = 3;
+    UPROPERTY(EditDefaultsOnly) int32 NumStations = 3;
+
+    /* Index 0-2 → drives already uploaded at that station         */
+    UPROPERTY() TArray<int32> StationProgress;
+
+    /* Total required to win (3×3 = 9)                             */
     UPROPERTY(EditDefaultsOnly) int32 DrivesGoal = 9;
+
     UPROPERTY(VisibleAnywhere)  int32 NumUploaded = 0;
 };

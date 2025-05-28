@@ -13,6 +13,7 @@
 #include "InteractableInterface.h"
 #include "MRCharacterMovementComponent.h"    // add
 #include "GameFramework/PlayerController.h"
+#include "DrawDebugHelpers.h" // Debugs
 
 //DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -79,6 +80,8 @@ ASprintCharacter::ASprintCharacter(const FObjectInitializer& ObjectInitializer)
 void ASprintCharacter::BeginPlay()
 {
     Super::BeginPlay();
+    MRMovement = Cast<UMRCharacterMovementComponent>(GetCharacterMovement());
+    check(MRMovement);
 
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
@@ -111,7 +114,9 @@ void ASprintCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
         EIC->BindAction(IA_Sprint, ETriggerEvent::Completed, this, &ASprintCharacter::StopSprinting);
         
         //Interact
-        EIC->BindAction(IA_Interact,ETriggerEvent::Started, this, &ASprintCharacter::DoInteract);
+        EIC->BindAction(IA_Interact, ETriggerEvent::Triggered, this, &ASprintCharacter::DoInteract);
+        // add this once, right after the bind so we know it’s configured
+        UE_LOG(LogTemp, Log, TEXT("[Input] IA_Interact is pressed"));
     }
 }
 
@@ -163,23 +168,36 @@ void ASprintCharacter::StopSprinting(const FInputActionValue& /*Value*/)
 
 void ASprintCharacter::DoInteract()
 {
-    FVector Start = FollowCamera->GetComponentLocation();
-    FVector End = Start + (FollowCamera->GetForwardVector() * 300.f);
-    FHitResult Hit;
-    FCollisionQueryParams Params(NAME_None, false, this);
+    /* ---------- sanity checks ---------- */
+    if (!FollowCamera)          return;              // camera missing – nothing to do
+    if (!GetWorld())            return;
 
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    /* ---------- line-trace in front of the camera ---------- */
+    const FVector  Start = FollowCamera->GetComponentLocation();
+    const FVector  End = Start + FollowCamera->GetForwardVector() * 1000.f;
+
+    DrawDebugSphere(GetWorld(), End, 8.f, 8,
+        FColor::Red, false, 2.f);   // shows the end-point
+
+    FHitResult            Hit;
+    FCollisionQueryParams Params(NAME_None, /*bTraceComplex=*/false, this);
+
+    const bool bHit = GetWorld()->LineTraceSingleByChannel(
+        Hit, Start, End, ECC_Visibility, Params);
+
+    if (bHit)
     {
-        AActor* HitActor = Hit.GetActor();
-        if (HitActor && HitActor->GetClass()->ImplementsInterface
-        (UInteractableInterface::StaticClass()))
+        if (AActor* HitActor = Hit.GetActor())
         {
-            // calls the blueprint/native implementation
-            IInteractableInterface::Execute_Interact(HitActor, this);
+            if (HitActor->GetClass()->ImplementsInterface(
+                UInteractableInterface::StaticClass()))
+            {
+                IInteractableInterface::Execute_Interact(HitActor, this);
+            }
         }
     }
 
-    // Fallback: if we’re **inside an UploadStation trigger** -------------
+    /* ---------- fallback: standing in an UploadStation trigger ---------- */
     if (Inventory && Inventory->bInUploadRange)
     {
         const int32 Num = Inventory->UploadAllDrives();
@@ -190,4 +208,10 @@ void ASprintCharacter::DoInteract()
                 FString::Printf(TEXT("Uploaded %d drive(s)!"), Num));
         }
     }
+
+    /* ---------- debug: what did we hit? ---------- */
+    const FString NameStr = bHit && Hit.GetActor()
+        ? Hit.GetActor()->GetName()
+        : TEXT("None");
+    UE_LOG(LogTemp, Log, TEXT("[Interact] trace result: %s"), *NameStr);
 }
