@@ -22,16 +22,17 @@ public class Codingcpp : ModuleRules
             "AnimationCore",      // for AnimInstance
             "AnimGraphRuntime",    // if you ever use graph‐driven nodes
             "Niagara",
-            "UMG",
             "AIModule"
         });
 
         // If you use any BlueprintLibrary math calls:
         PrivateDependencyModuleNames.AddRange(new string[] {
-            "Kismet",
-            "Niagara",
-            "Slate",
-            "SlateCore"
+            //"Kismet",
+            //"Niagara",
+            //"Slate",
+            "UMG",
+            "SlateCore",
+            "Niagara"
         });
     }
 }

@@ -24,4 +24,8 @@
 
 ## Known Issues & Future Improvements
 - Issue with UI not working as intended. progress bar doesn't fill up or health correctly portrays current health
-- 
+
+##Github
+- GIT HUBS REPOSTIROY DOWNLOAD LINK
+https://github.com/NotJonatan/UE5_CodingProject
+-download and make sure to generate visual studio files and then open the project to avoid issues.
