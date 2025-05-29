@@ -1,4 +1,4 @@
-// InventoryComponent.h
+// Source/Codingcpp/Public/InventoryComponent.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -20,11 +20,12 @@ public:
     /* ---------------- inventory API ---------------- */
 
     /** Add a drive to the player’s list (called from AHardDriveActor) */
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
     void AddHardDrive(AHardDriveActor* Drive);
 
     /** Upload everything currently in the drive array, return # uploaded */
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    int32 UploadAllDrives();  // <-- single, final declaration
+    int32 UploadAllDrives();
 
     /** Has the player stepped into an upload station’s trigger? */
     UPROPERTY(BlueprintReadWrite, Category = "Inventory")
@@ -40,32 +41,34 @@ public:
 
     /** True if the player holds at least Amount drives */
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    bool HasRequiredDrives(int32 Amount) const
-    {
-        return HardDrives.Num() >= Amount;
-    }
+    bool HasRequiredDrives(int32 Amount) const { return HardDrives.Num() >= Amount; }
 
     /** Removes the first Amount drives from the array */
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
     void ConsumeHardDrives(int32 Amount);
 
     /** # of one-time Sandevistan uses the player holds */
-    UPROPERTY(BlueprintReadOnly, Category = "Sandevistan")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sandevistan")
     int32 SandevistanCharges = 0;
 
-    /** Call to grant one use */
+    /** Grant one Sandevistan charge */
     UFUNCTION(BlueprintCallable, Category = "Sandevistan")
-    void AddSandevistanCharge() { ++SandevistanCharges; }
+    void AddSandevistanCharge()
+    {
+        ++SandevistanCharges;
+        UE_LOG(LogTemp, Log, TEXT("Picked up Sandevistan! Charges = %d"), SandevistanCharges);
+    }
 
-    /** Attempt to consume one use */
+    /** Attempt to consume one Sandevistan charge */
     UFUNCTION(BlueprintCallable, Category = "Sandevistan")
-    bool UseSandevistan()
+    bool ConsumeSandevistanCharge()
     {
         if (SandevistanCharges > 0)
         {
             --SandevistanCharges;
+            UE_LOG(LogTemp, Log, TEXT("Used Sandevistan. Remaining = %d"), SandevistanCharges);
             return true;
         }
         return false;
     }
-
 };

@@ -47,19 +47,12 @@ void ASandevistanPickup::NotifyActorBeginOverlap(AActor* OtherActor)
             -1, 2.f, FColor::Yellow,
             TEXT("Sandevistan ready to be used for 1 time!"));
     }
-  Super::NotifyActorBeginOverlap(OtherActor);
-
-  if (ASprintCharacter* Player = Cast<ASprintCharacter>(OtherActor))
-  {
-    if (GEngine)
-      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,
-        TEXT("Sandevistan ready to be used for 1 time!"));
-
-    if (SandevistanVFX)
-      UGameplayStatics::SpawnEmitterAtLocation(
-        GetWorld(), SandevistanVFX, Player->GetActorLocation());
-
-    Player->ActivateSandevistan();
-    Destroy();
-  }
+    if (ASprintCharacter* PC = Cast<ASprintCharacter>(OtherActor))
+    {
+        if (UInventoryComponent* Inv = PC->FindComponentByClass<UInventoryComponent>())
+        {
+            Inv->AddSandevistanCharge();
+            Destroy();  // remove the pickup
+        }
+    }
 }

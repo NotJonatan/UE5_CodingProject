@@ -120,6 +120,12 @@ void ASprintCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
         EIC->BindAction(IA_Interact, ETriggerEvent::Triggered, this, &ASprintCharacter::DoInteract);
         // add this once, right after the bind so we know it’s configured
         UE_LOG(LogTemp, Log, TEXT("[Input] IA_Interact is pressed"));
+
+        // Bind Sandevistan Action
+        EIC->BindAction(IA_Sandevistan, ETriggerEvent::Triggered, this, &ASprintCharacter::OnSandevistan);
+
+        // Bind Respawn Action
+        EIC->BindAction(IA_Respawn, ETriggerEvent::Triggered, this, &ASprintCharacter::OnRespawn);
     }
 }
 
@@ -222,28 +228,79 @@ void ASprintCharacter::DoInteract()
 void ASprintCharacter::ActivateSandevistan()
 {
     if (bIsSandevistanActive)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Sandevistan already active."));
         return;
+    }
 
     bIsSandevistanActive = true;
+
     UWorld* World = GetWorld();
-    if (!World) return;
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("World context is null!"));
+        return;
+    }
 
-    // Slow everything down
+    // Slow down time globally
     UGameplayStatics::SetGlobalTimeDilation(World, 0.2f);
+    UE_LOG(LogTemp, Warning, TEXT("Sandevistan Activated: Time slowed."));
 
-    // After Duration, call ResetTimeDilation
-    World
-        ->GetTimerManager()
-        .SetTimer(SandevistanTimerHandle, this, &ASprintCharacter::ResetTimeDilation,
-            SandevistanDuration, false);
+    // Set timer to reset the effect
+    World->GetTimerManager().SetTimer(
+        SandevistanTimerHandle,
+        this,
+        &ASprintCharacter::ResetTimeDilation,
+        SandevistanDuration,
+        false
+    );
 }
 
 void ASprintCharacter::ResetTimeDilation()
 {
     UWorld* World = GetWorld();
     if (World)
-        UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
+    {
+        // world returns to normal
+        UGameplayStatics::SetGlobalTimeDilation(World, 1.f);
+        UE_LOG(LogTemp, Warning, TEXT("Sandevistan Deactivated: Time reset."));
+    }
 
-    // start cooldown timer if you like...
+    // clear custom dilation so *this* also returns to normal
+    CustomTimeDilation = 1.f;
+    if (GetMesh())
+    {
+        GetMesh()->GlobalAnimRateScale = 1.f;
+    }
+
     bIsSandevistanActive = false;
+}
+
+// Respawn logic implementation
+void ASprintCharacter::OnRespawn()
+{
+    if (SpawnPosition)
+    {
+        SetActorLocation(SpawnPosition->GetActorLocation());
+        SetActorRotation(SpawnPosition->GetActorRotation());
+        UE_LOG(LogTemp, Warning, TEXT("Player Respawned!"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("SpawnPosition is not set! Please assign it in the editor."));
+    }
+}
+
+void ASprintCharacter::OnSandevistan()
+{
+    // Try to consume one charge
+    if (Inventory && Inventory->ConsumeSandevistanCharge())
+    {
+        ActivateSandevistan();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No Sandevistan charges available!"));
+        // Optionally: play “no ammo” sound or UI flash
+    }
 }

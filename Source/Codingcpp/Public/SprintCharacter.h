@@ -61,6 +61,12 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* IA_Fire;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Respawn;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+    UInputAction* IA_Sandevistan;
+
     // Sprint speeds
     UPROPERTY(EditDefaultsOnly, Category = "Sprint")
     float WalkSpeed = 300.f;
@@ -83,6 +89,12 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     //UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     //UShooterComponent* Shooter;
     public:
+        // Functions for handling actions: sandevistan and respawning
+        UFUNCTION()
+        void OnSandevistan();
+
+        UFUNCTION()
+        void OnRespawn();
 
         /** Activates the one‐time sandevistan effect */
     UFUNCTION(BlueprintCallable, Category = "Sandevistan")
@@ -125,4 +137,7 @@ protected:
 
     /** Handle for our timer */
     FTimerHandle SandevistanTimerHandle;
+
+    UPROPERTY(EditAnywhere, Category = "Respawn")
+    AActor* SpawnPosition;
 };
