@@ -70,7 +70,7 @@ ASprintCharacter::ASprintCharacter(const FObjectInitializer& ObjectInitializer)
     //    GetMesh()->SetAnimClass(AnimBPClass.Class);
     //}
 
-    HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+    //HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 
     Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 

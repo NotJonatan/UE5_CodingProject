@@ -13,7 +13,7 @@
 #include "GameFramework/WorldSettings.h" // for AWorldSettings
 #include "TimerManager.h"             // for FTimerManager
 #include "InventoryComponent.h"
-#include "HealthComponent.h"        // at the top
+//#include "HealthComponent.h"        // at the top
 #include "InteractableInterface.h"
 #include "MRMovementTypes.h"               // <-- add
 #include "MRCharacterMovementComponent.h"  // <-- add
@@ -83,8 +83,8 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     //AUploadStationActor* StationInRange = nullptr;
 
     // in your character class body:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
-    UHealthComponent* HealthComponent;
+    //UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
+    //UHealthComponent* HealthComponent;
 
     //UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     //UShooterComponent* Shooter;
