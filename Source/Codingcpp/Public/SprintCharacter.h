@@ -1,6 +1,6 @@
 ﻿// Source/Codingcpp/Public/SprintCharacter.h
 #pragma once
-
+//#include "HealthComponent.h"        // NO MORE CAUSES ISSUES
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 
@@ -12,11 +12,14 @@
 #include "Engine/World.h"             // for UWorld, GetWorld()
 #include "GameFramework/WorldSettings.h" // for AWorldSettings
 #include "TimerManager.h"             // for FTimerManager
+// Inventory & Interfaces
 #include "InventoryComponent.h"
-//#include "HealthComponent.h"        // at the top
 #include "InteractableInterface.h"
 #include "MRMovementTypes.h"               // <-- add
 #include "MRCharacterMovementComponent.h"  // <-- add
+// Niagara
+#include "NiagaraComponent.h"
+// Generated header
 #include "SprintCharacter.generated.h"
 
 
@@ -24,7 +27,9 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class UNiagaraComponent;
 class AWorldSettings;
+class UInventoryComponent;
 
 UCLASS(config = Game)
 class CODINGCPP_API ASprintCharacter : public ACharacter
@@ -80,6 +85,7 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
     UPROPERTY(EditDefaultsOnly, Category = "MR|Movement")
     FMRMovementSettings MovementSettings;
 
+
     //AUploadStationActor* StationInRange = nullptr;
 
     // in your character class body:
@@ -96,9 +102,17 @@ class CODINGCPP_API ASprintCharacter : public ACharacter
         UFUNCTION()
         void OnRespawn();
 
+        // Cached copies for restoration after Sandevistan
+        float DefaultWalkSpeed;
+        float DefaultSprintSpeed;
+
         /** Activates the one‐time sandevistan effect */
     UFUNCTION(BlueprintCallable, Category = "Sandevistan")
     void ActivateSandevistan();
+
+    /** Niagara VFX to play when Sandevistan is active */
+    UPROPERTY(EditAnywhere, Category = "Sandevistan")
+    UNiagaraComponent* SandevistanVFXComponent;
 
     // Internal helper to restore normal time
     UFUNCTION()

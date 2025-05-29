@@ -76,6 +76,10 @@ ASprintCharacter::ASprintCharacter(const FObjectInitializer& ObjectInitializer)
 
     //Shooter = CreateDefaultSubobject<UShooterComponent>("Shooter");
 
+        // Expose a respawn point reference
+    SpawnPosition = nullptr;
+
+
 }
 
 void ASprintCharacter::BeginPlay()
@@ -83,6 +87,10 @@ void ASprintCharacter::BeginPlay()
     Super::BeginPlay();
     MRMovement = Cast<UMRCharacterMovementComponent>(GetCharacterMovement());
     check(MRMovement);
+
+    // Cache default speeds for later scaling
+    DefaultWalkSpeed = WalkSpeed;
+    DefaultSprintSpeed = SprintSpeed;
 
     bIsSandevistanActive = false;
 
@@ -227,26 +235,31 @@ void ASprintCharacter::DoInteract()
 
 void ASprintCharacter::ActivateSandevistan()
 {
-    if (bIsSandevistanActive)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Sandevistan already active."));
-        return;
-    }
-
+    if (bIsSandevistanActive) return;
     bIsSandevistanActive = true;
 
     UWorld* World = GetWorld();
-    if (!World)
+    if (!World) return;
+
+    // 1) Slow the world
+    const float SlowAmount = 0.2f;
+    UGameplayStatics::SetGlobalTimeDilation(World, SlowAmount);
+
+    // 2) Counteract on the player: tick & anim only
+    const float Inverse = 1.f / SlowAmount;
+    CustomTimeDilation = Inverse;
+    if (GetMesh())
     {
-        UE_LOG(LogTemp, Error, TEXT("World context is null!"));
-        return;
+        GetMesh()->GlobalAnimRateScale = Inverse;
     }
 
-    // Slow down time globally
-    UGameplayStatics::SetGlobalTimeDilation(World, 0.2f);
-    UE_LOG(LogTemp, Warning, TEXT("Sandevistan Activated: Time slowed."));
+    // 3) Play VFX
+    if (SandevistanVFXComponent)
+    {
+        SandevistanVFXComponent->Activate(true);
+    }
 
-    // Set timer to reset the effect
+    // 4) Schedule reset
     World->GetTimerManager().SetTimer(
         SandevistanTimerHandle,
         this,
@@ -261,16 +274,20 @@ void ASprintCharacter::ResetTimeDilation()
     UWorld* World = GetWorld();
     if (World)
     {
-        // world returns to normal
         UGameplayStatics::SetGlobalTimeDilation(World, 1.f);
-        UE_LOG(LogTemp, Warning, TEXT("Sandevistan Deactivated: Time reset."));
     }
 
-    // clear custom dilation so *this* also returns to normal
+    // Restore actor tick & anim
     CustomTimeDilation = 1.f;
     if (GetMesh())
     {
         GetMesh()->GlobalAnimRateScale = 1.f;
+    }
+
+    // Turn VFX off
+    if (SandevistanVFXComponent)
+    {
+        SandevistanVFXComponent->Deactivate();
     }
 
     bIsSandevistanActive = false;
