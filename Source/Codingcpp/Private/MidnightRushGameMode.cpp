@@ -3,6 +3,7 @@
 //#include "Codingcpp.h"                             // causes error if this isn't first library
 //#include "SprintCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blueprint/UserWidget.h"
 
 
 
@@ -29,7 +30,6 @@ void AMidnightRushGameMode::BeginPlay()
 void AMidnightRushGameMode::RegisterUpload(int32 StationID)
 {
     if (!StationProgress.IsValidIndex(StationID)) return;
-
     if (StationProgress[StationID] >= DrivesPerStation) return;   // already full
 
     StationProgress[StationID] += 1;
@@ -43,7 +43,9 @@ void AMidnightRushGameMode::RegisterUpload(int32 StationID)
     if (NumUploaded >= DrivesGoal)
     {
         UE_LOG(LogTemp, Log, TEXT("[GM] All drives uploaded – WIN"));
-        // OnGoalReached.Broadcast();  // if you kept that delegate
+
+        // ← Add this call to trigger your UI
+        OnGameWon();
     }
 }
 
@@ -51,4 +53,33 @@ void AMidnightRushGameMode::NotifyPlayerDied()
 {
     UE_LOG(LogTemp, Warning, TEXT("[GM] Player died – fail state"));
     OnPlayerDied.Broadcast();       // does nothing if nobody bound
+}
+
+void AMidnightRushGameMode::OnGameWon()
+{
+    UE_LOG(LogTemp, Log, TEXT("[GM] OnGameWon()"));
+
+    if (YouWinWidgetClass == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("OnGameWon: YouWinWidgetClass not set!"));
+        return;
+    }
+
+    // Grab the first player controller
+    APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+    if (!PC)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("OnGameWon: No PlayerController found"));
+        return;
+    }
+
+    // Create and show the widget
+    UUserWidget* WinScreen = CreateWidget<UUserWidget>(PC, YouWinWidgetClass);
+    if (WinScreen)
+    {
+        WinScreen->AddToViewport();
+        PC->SetPause(true);
+        PC->bShowMouseCursor = true;
+        PC->SetInputMode(FInputModeUIOnly());
+    }
 }
