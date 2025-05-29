@@ -27,6 +27,9 @@ public:
     /*  Called by HealthComponent when player reaches 0 HP  */
     UFUNCTION() void NotifyPlayerDied();
 
+    // Override to pick our custom spawn-point
+    virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
 protected:
     virtual void BeginPlay() override;
 

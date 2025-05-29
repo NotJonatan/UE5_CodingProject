@@ -16,6 +16,7 @@
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h" // Debug
 #include "TimerManager.h"
+#include "MidnightRushGameMode.h"        // bring in your custom GameMode
 
 //DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -241,51 +242,37 @@ void ASprintCharacter::ActivateSandevistan()
     UWorld* World = GetWorld();
     if (!World) return;
 
-    // 1) Slow the world
-    const float SlowAmount = 0.2f;
+    // 1) Slow the world only
+    constexpr float SlowAmount = 0.2f;
     UGameplayStatics::SetGlobalTimeDilation(World, SlowAmount);
 
-    // 2) Counteract on the player: tick & anim only
-    const float Inverse = 1.f / SlowAmount;
-    CustomTimeDilation = Inverse;
-    if (GetMesh())
-    {
-        GetMesh()->GlobalAnimRateScale = Inverse;
-    }
+    // 2) Counteract your character tick so movement/animations run at normal speed
+    CustomTimeDilation = 1.f / SlowAmount;
 
-    // 3) Play VFX
-    if (SandevistanVFXComponent)
+    // 3) Fire the VFX
+    if (SandevistanVFXComponent && !SandevistanVFXComponent->IsActive())
     {
         SandevistanVFXComponent->Activate(true);
     }
 
-    // 4) Schedule reset
+    // 4) Schedule the reset
     World->GetTimerManager().SetTimer(
         SandevistanTimerHandle,
-        this,
-        &ASprintCharacter::ResetTimeDilation,
-        SandevistanDuration,
-        false
+        this, &ASprintCharacter::ResetTimeDilation,
+        SandevistanDuration, false
     );
 }
 
 void ASprintCharacter::ResetTimeDilation()
 {
-    UWorld* World = GetWorld();
-    if (World)
+    if (UWorld* World = GetWorld())
     {
         UGameplayStatics::SetGlobalTimeDilation(World, 1.f);
     }
 
-    // Restore actor tick & anim
     CustomTimeDilation = 1.f;
-    if (GetMesh())
-    {
-        GetMesh()->GlobalAnimRateScale = 1.f;
-    }
 
-    // Turn VFX off
-    if (SandevistanVFXComponent)
+    if (SandevistanVFXComponent && SandevistanVFXComponent->IsActive())
     {
         SandevistanVFXComponent->Deactivate();
     }
@@ -296,15 +283,27 @@ void ASprintCharacter::ResetTimeDilation()
 // Respawn logic implementation
 void ASprintCharacter::OnRespawn()
 {
-    if (SpawnPosition)
+    UE_LOG(LogTemp, Warning, TEXT("OnRespawn() called."));
+
+    // Grab the player controller
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC)
     {
-        SetActorLocation(SpawnPosition->GetActorLocation());
-        SetActorRotation(SpawnPosition->GetActorRotation());
-        UE_LOG(LogTemp, Warning, TEXT("Player Respawned!"));
+        UE_LOG(LogTemp, Error, TEXT("OnRespawn: no PC"));
+        return;
+    }
+
+    // Use our custom GameMode
+    if (AMidnightRushGameMode* MRGM = Cast<AMidnightRushGameMode>(UGameplayStatics::GetGameMode(this)))
+    {
+        // Ask GM to pick a start then restart
+        AActor* Spawn = MRGM->ChoosePlayerStart(PC);
+        MRGM->RestartPlayerAtPlayerStart(PC, Spawn);
+        UE_LOG(LogTemp, Warning, TEXT("Player respawned at %s"), Spawn ? *Spawn->GetName() : TEXT("null"));
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("SpawnPosition is not set! Please assign it in the editor."));
+        UE_LOG(LogTemp, Error, TEXT("OnRespawn: not using MidnightRushGameMode"));
     }
 }
 

@@ -2,6 +2,23 @@
 #include "MidnightRushGameMode.h"
 //#include "Codingcpp.h"                             // causes error if this isn't first library
 //#include "SprintCharacter.h"
+#include "Kismet/GameplayStatics.h"
+
+
+
+AActor* AMidnightRushGameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+    // Search by tag:
+    static const FName RespawnTag(TEXT("Respawn"));
+    TArray<AActor*> Found;
+    UGameplayStatics::GetAllActorsWithTag(this, RespawnTag, Found);
+
+    if (Found.Num() > 0)
+    {
+        return Found[0];
+    }
+    return Super::ChoosePlayerStart_Implementation(Player);
+}
 
 void AMidnightRushGameMode::BeginPlay()
 {
