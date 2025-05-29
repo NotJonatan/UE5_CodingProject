@@ -1,4 +1,6 @@
-﻿#include "RailSplineActor.h"
+﻿// RailSplineActor.cpp
+
+#include "RailSplineActor.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 
@@ -6,48 +8,60 @@ ARailSplineActor::ARailSplineActor()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // Create the spline component
-    RailSpline = CreateDefaultSubobject<USplineComponent>("RailSpline");
+    RailSpline = CreateDefaultSubobject<USplineComponent>(TEXT("RailSpline"));
     RootComponent = RailSpline;
-
-    // Don’t try to load anything here – just assign in the editor.
 }
 
 void ARailSplineActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
 
-    // destroy any old segments
-    for (auto* Comp : SplineMeshes)
-        if (Comp) Comp->DestroyComponent();
+    // Clear out old spline meshes
+    for (USplineMeshComponent* Comp : SplineMeshes)
+    {
+        if (Comp)
+        {
+            Comp->DestroyComponent();
+        }
+    }
     SplineMeshes.Empty();
 
-    if (!SegmentMesh) return;  // make sure you picked one in the editor!
+    if (!SegmentMesh) return;
 
-    const int32 Num = RailSpline->GetNumberOfSplinePoints();
-    for (int32 i = 0; i < Num - 1; ++i)
+    const int32 NumPoints = RailSpline->GetNumberOfSplinePoints();
+
+    for (int32 i = 0; i < NumPoints - 1; ++i)
     {
+        // Create new spline‐mesh component
         USplineMeshComponent* SMC = NewObject<USplineMeshComponent>(this);
         SMC->RegisterComponentWithWorld(GetWorld());
-        SMC->AttachToComponent(RailSpline, FAttachmentTransformRules::KeepWorldTransform);
+        SMC->AttachToComponent(RailSpline, FAttachmentTransformRules::KeepRelativeTransform);
+        SMC->SetMobility(EComponentMobility::Movable);
 
-        // assign mesh + material
+        // Assign mesh + optional material
         SMC->SetStaticMesh(SegmentMesh);
         if (SegmentMaterial)
+        {
             SMC->SetMaterial(0, SegmentMaterial);
+        }
 
-        // grab **world** positions & tangents
+        // Basic blocking collision
+        SMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        SMC->SetCollisionProfileName(TEXT("BlockAll"));
+        SMC->SetGenerateOverlapEvents(false);
+
+        // Deform along the spline in world space
         const FVector StartPos = RailSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World);
         const FVector StartTan = RailSpline->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::World);
         const FVector EndPos = RailSpline->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World);
         const FVector EndTan = RailSpline->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World);
 
-        // **world**-space API
         SMC->SetStartPosition(StartPos, ESplineCoordinateSpace::World);
         SMC->SetStartTangent(StartTan, ESplineCoordinateSpace::World);
         SMC->SetEndPosition(EndPos, ESplineCoordinateSpace::World);
         SMC->SetEndTangent(EndTan, ESplineCoordinateSpace::World);
 
+        // Track for cleanup
         SplineMeshes.Add(SMC);
     }
 }
